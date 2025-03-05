@@ -3,7 +3,7 @@ Repo for demo idea and code for ICT720 course 2025
 
 # Our members
 1. Than Zaw Toe 
-2. 
+2. Narodom Yatnimit
 3.
 
 ## User stories
