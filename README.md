@@ -2,9 +2,9 @@
 Repo for demo idea and code for ICT720 course 2025
 
 # Our members
-1. Than Zaw Toe 
-2. Narodom Yatnimit
-3.
+1. Than Zaw Toe (SIIT,Thammasat)
+2. Narodom Yatnimit (KU)
+3. Duc Nhat Luong ( Institute of Science Tokyo)
 
 ## User stories
 1. As a **gymer**, I want to **know my limitation**, so that **I can stop at the right time**.
