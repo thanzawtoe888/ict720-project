@@ -15,4 +15,7 @@ This is a health monitoring application that tracks the status of gym trainers i
 3. As a **gymer**, I want to **check my heart rate and related health precautions before playing weight lifting**
 
 
-## Software models
+### Sequence diagram
+![Flowchart of the application](images/flowchart.jpg)
+![Hardware lists](images/hw.jpg)
+
