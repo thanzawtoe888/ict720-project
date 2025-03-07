@@ -1,8 +1,10 @@
 # Group name: Fitness Guys
 Repo for demo idea and code for ICT720 course 2025.
+
+## A health-tracking application
 This is a health monitoring application that tracks the status of gym trainers in real time. The system utilizes heart rate and motion sensors (IMU) to detect abnormal changes in trainers' physical health during workouts. The application advises trainers on modifying their training or taking a rest. In case of an accident, it functions as an SOS application, sending an SOS signal for help.
 
-# Our members
+## Our members
 1. Than Zaw Toe (SIIT,Thammasat)
 2. Narodom Yatnimit (KU)
 3. Luong Duc Nhat (Institute of Science Tokyo)
