@@ -17,5 +17,5 @@ This is a health monitoring application that tracks the status of gym trainers i
 
 ### Sequence diagram
 ![Flowchart of the application](images/flowchart.jpg)
-![Hardware lists](images/hw.jpg)
+![Hardware lists](images/hw.png)
 
