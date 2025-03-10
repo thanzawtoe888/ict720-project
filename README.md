@@ -19,3 +19,11 @@ This is a health monitoring application that tracks the status of gym trainers i
 ![Flowchart of the application](images/flowchart.png)
 ![Hardware lists](images/hw.png)
 
+## Build and Installation
+1. Clone the repository:
+2. Create a `.env` file by copying the example file:
+3. Open the `.env` file and fill in the required environment variables.
+4. Build the project:
+5. Upload the project:
+
+** Make sure to configure your `.env` file with the correct values before running the application.
