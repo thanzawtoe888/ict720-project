@@ -78,10 +78,10 @@ This is a health monitoring application that tracks the status of gym trainers i
 1) **Name**
 2) **Age**
 3) **BMI** ->> four catagories : 
-	-Underweight = < 18.5
-	-Normal weight = 18.5 - 24.9
-	-Overweight = 125-29.9
-	-Obesity = BMI of 30 or greater
+-**Underweight** = < 18.5
+-**Normal weight** = 18.5 - 24.9
+-**Overweight** = 25-29.9
+-**Obesity** = BMI of 30 or greater
 	 
 4) **Recommended Workout plan**
 -**Underweight** (BMI < 18.5):Building muscle mass and strength.
