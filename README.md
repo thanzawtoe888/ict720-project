@@ -15,7 +15,48 @@ This is a health monitoring application that tracks the status of gym trainers i
 3. As a **gymer**, I want to **check my heart rate and related health precautions before playing weight lifting**
 
 
-### Sequence diagram
+## Sequence diagram
 ![Flowchart of the application](images/flow_chart.png)
 ![Hardware lists](images/hw.png)
 
+## Data format
+```json
+{
+    "user": {
+        "id": "dvadvfsd12@4egv",
+        "name": {
+            "last_name": "Luca",
+            "first_name": "Luca"
+        },
+        "occupation": "SIIT",
+        "height": 170,
+        "age": 26,
+        "telephone": 123456789,
+        "email": "luca@gmail.com"
+    },
+    "guarantor": {
+        "name": {
+            "last_name": "Lucadad",
+            "first_name": "Lucadad"
+        },
+        "occupation": "SIIT",
+        "telephone": 123456789,
+        "email": "lucadad@gmail.com"
+    },
+    "weight_logs": [
+        { "weight": 70, "timestamp": "2020-01-01 00:00:00" },
+        { "weight": 71, "timestamp": "2020-01-02 00:00:00" },
+        { "weight": 72, "timestamp": "2020-01-03 00:00:00" }
+    ],
+    "bmi_logs": [
+        { "bmi": 70, "timestamp": "2020-01-01 00:00:00" },
+        { "bmi": 71, "timestamp": "2020-01-01 00:00:00" },
+        { "bmi": 72, "timestamp": "2020-01-01 00:00:00" }
+    ],
+    "heart_rate_logs": [
+        { "val": 70, "timestamp": "2020-01-01 00:00:00" },
+        { "val": 71, "timestamp": "2020-01-01 00:00:00" },
+        { "val": 72, "timestamp": "2020-01-01 00:00:00" }
+    ]
+}
+```
