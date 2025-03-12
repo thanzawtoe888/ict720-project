@@ -74,3 +74,17 @@ This is a health monitoring application that tracks the status of gym trainers i
 5. Upload the project:
 
 ** Make sure to configure your `.env` file with the correct values before running the application.
+## How to use the data
+1) **Name**
+2) **Age**
+3) **BMI** ->> four catagories : 
+	-Underweight = < 18.5
+	-Normal weight = 18.5 - 24.9
+	-Overweight = 125-29.9
+	-Obesity = BMI of 30 or greater
+	 
+4) **Recommended Workout plan**
+-**Underweight** (BMI < 18.5):Building muscle mass and strength.
+-**Normal Weight** (BMI 18.5 - 24.9):Maintaining fitness, improving cardiovascular health, and building strength.
+-**Overweight** (BMI 25 - 29.9):Losing weight, improving cardiovascular health, and build
+-**Obesity** (BMI ≥ 30):Gradual weight loss, improving cardiovascular health, and increasing mobility.
