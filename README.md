@@ -44,7 +44,7 @@ This is a health monitoring application that tracks the status of gym trainers i
             "last_name": "Lucadad",
             "first_name": "Lucadad"
         },
-        "occupation": "SIIT",
+        "relationship": "father",
         "telephone": 123456789,
         "email": "lucadad@gmail.com"
     },
@@ -84,7 +84,11 @@ This is a health monitoring application that tracks the status of gym trainers i
 	-Obesity = BMI of 30 or greater
 	 
 4) **Recommended Workout plan**
--**Underweight** (BMI < 18.5):Building muscle mass and strength.
--**Normal Weight** (BMI 18.5 - 24.9):Maintaining fitness, improving cardiovascular health, and building strength.
--**Overweight** (BMI 25 - 29.9):Losing weight, improving cardiovascular health, and build
--**Obesity** (BMI ≥ 30):Gradual weight loss, improving cardiovascular health, and increasing mobility.
+
+| BMI Category    | BMI Range       | Workout Focus |
+|---------------|-----------------|------------------------------------------------|
+| **Underweight** | < 18.5          | Building muscle mass and strength. |
+| **Normal Weight** | 18.5 - 24.9   | Maintaining fitness, improving cardiovascular health, and building strength. |
+| **Overweight** | 25 - 29.9        | Losing weight, improving cardiovascular health, and building strength. |
+| **Obesity** | ≥ 30             | Gradual weight loss, improving cardiovascular health, and increasing mobility. |
+
