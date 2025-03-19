@@ -270,8 +270,6 @@ void display_info() {
 void connectWifi() {
     WiFiMulti WiFiMulti;
     int sum = 0;
-    M5.begin();             // Init M5StickC.
-    M5.Lcd.setRotation(3);  // Rotate the screen.
     WiFiMulti.addAP(ssid, password);  // Add wifi configuration information.
     M5.lcd.printf("Waiting connect to WiFi: %s ...", ssid);  // Serial port output format string.
     while (WiFiMulti.run() != WL_CONNECTED) {  // If the connection to wifi is not established successfully.
