@@ -1,163 +1,258 @@
-// https://github.com/m5stack/M5StickC-Plus/blob/master/examples/Hat/HEART_RATE_MAX30102/HEART_RATE_MAX30102.ino
+// #include <Arduino.h>
+// #include <M5StickC.h>
+// #include "power.h"
+// #include "utility/NetworkModule.h"
 
-#include <Arduino.h>
+// NetworkModule network_module;
+
+// void setup() {
+//   M5.begin();
+//   M5.Lcd.println("Press Btn B to power off.\n");
+//   Serial.begin(115200);
+//   delay(1000);  // Add delay to give time for Serial Monitor to open
+//   Serial.println("Starting setup...");  // This will print in the Serial Monitor
+//   network_module.connect();
+// }
+
+// void loop() {
+//   if (M5.BtnB.wasPressed()) {
+//     powerOff();
+//   }
+//   M5.update();
+//   delay(2000);
+//   Serial.printf("Is network connected: %d\n", network_module.isConnected());
+// }
+
+
+
+
+
+// Function: Detection of heart rate and blood oxygen concentration
+// Units used: M5StickCPlus, Heart(MAX30102)
+// please install MAX3010x lib for MAX30102 by library manager first
+// addr: https://github.com/sparkfun/SparkFun_MAX3010x_Sensor_Library
 #include <M5StickC.h>
-#include <MAX30105.h>
 #include <Wire.h>
-#include <WiFiClient.h>
-#include <PubSubClient.h>
-#include <ArduinoJson.h>
-#include "utility/NetworkModule.h"
-#include "utility/PowerModule.h"
-// #include "utility/HeartRateModule.h"
-
+#include "MAX30105.h"
 #include "heartRate.h"
+#include "spo2_algorithm.h"
 
-
-
-
-// Share varaibles
-const byte Button_A = 37;
-const byte pulseLED = 26;
-// HeartRate Variables
-const byte RATE_SIZE = 4; //Increase this for more averaging. 4 is good.
-byte rates[RATE_SIZE]; //Array of heart rates
-byte rateSpot = 0;
-long lastBeat = 0; //Time at which the last beat occurred
-
-long irValue;
-float beatsPerMinute;
-int beatAvg;
-// Modules
-NetworkModule network_module;
-PowerModule power_module;
-// MQTT Module.
-WiFiClient espClient;
-JsonDocument doc;
-PubSubClient mqtt_client(espClient);
-// Instantiate a MAX30102 sensor.
+TFT_eSprite Disbuff = TFT_eSprite(&M5.Lcd);
 MAX30105 Sensor;
 
-// For HeartRate Module.
-void hearterate_detect();
-// For MQTT Module.
-void mqtt_setup();
-void on_message(char* topic, byte* payload, unsigned int length);
+#define MAX_BRIGHTNESS 255
+#define bufferLength   100
+const byte Button_A = 37;
+const byte pulseLED = 26;
 
+uint32_t irBuffer[bufferLength];
+uint32_t redBuffer[bufferLength];
+
+int8_t V_Button, flag_Reset;
+int32_t spo2, heartRate, old_spo2;
+int8_t validSPO2, validHeartRate;
+const byte RATE_SIZE = 5;
+uint16_t rate_begin  = 0;
+uint16_t rates[RATE_SIZE];
+byte rateSpot = 0;
+float beatsPerMinute;
+int beatAvg;
+byte num_fail;
+
+uint16_t line[2][320] = {0};
+
+uint32_t red_pos = 0, ir_pos = 0;
+uint16_t ir_max = 0, red_max = 0, ir_min = 0, red_min = 0, ir_last = 0,
+         red_last    = 0;
+uint16_t ir_last_raw = 0, red_last_raw = 0;
+uint16_t ir_disdata, red_disdata;
+uint16_t Alpha = 0.3 * 256;
+uint32_t t1, t2, last_beat, Program_freq;
+
+void display_info();
+
+void callBack(void) {
+    V_Button = digitalRead(Button_A);
+    if (V_Button == 0) flag_Reset = 1;
+    delay(10);
+}
 
 void setup() {
-  M5.begin();
-  Serial.begin(115200);
-  pinMode(25, INPUT_PULLUP);  // set pin mode
-  pinMode(pulseLED, OUTPUT);
-  pinMode(Button_A, INPUT);
-  Wire.begin(0, 26);  // initialize I2C
-  Serial.println("\nI2C Scanner");
-  Serial.println("Starting setup...");
-  if (!Sensor.begin(Wire, I2C_SPEED_FAST)) {
-    // init fail
-    M5.Lcd.print("Init Failed");
-    Serial.println(F("MAX30102 was not found. Please check wiring/power."));
-    // while (1) {
-    //   delay(1000);
-    //   Serial.print(".");
-    // }
-  }
-  
-  Sensor.setup(); //Configure sensor with default settings
-  Sensor.setPulseAmplitudeRed(0x0A); //Turn Red LED to low to indicate sensor is running
-  Sensor.setPulseAmplitudeGreen(0); //Turn off Green LED
-  // Network
-  network_module.connect();
-  mqtt_setup();
-  // Serial.printf("Is network connected: %d\n", network_module.isConnected());
-  M5.Lcd.println("Press Btn B to power off.\n");
+    // init
+    M5.begin();                 // initialize M5StickCPlus
+    Serial.begin(115200);       // initialize serial communication
+    pinMode(25, INPUT_PULLUP);  // set pin mode
+    pinMode(pulseLED, OUTPUT);
+    pinMode(Button_A, INPUT);
+    Wire.begin(0, 26);  // initialize I2C
 
+    // set Lcd
+    M5.Lcd.setRotation(3);
+    M5.Lcd.setSwapBytes(false);
+    Disbuff.createSprite(240, 135);
+    Disbuff.setSwapBytes(true);
+    Disbuff.createSprite(240, 135);
+
+    // initialize Sensor
+    if (!Sensor.begin(Wire, I2C_SPEED_FAST)) {
+        // init fail
+        M5.Lcd.print("Init Failed");
+        Serial.println(F("MAX30102 was not found. Please check wiring/power."));
+        while (1);
+    }
+    Serial.println(
+        F("Place your index finger on the Sensor with steady pressure"));
+
+    attachInterrupt(Button_A, callBack, FALLING);
+    // set Max30102
+    Sensor.setup();
+    // Sensor.clearFIFO();
 }
 
 void loop() {
-  if (M5.BtnB.wasPressed()) {
-    power_module.off();
-  }
-  hearterate_detect();
-  M5.update();
-  mqtt_client.loop();
-  // Serial.print(" R[");
-  // Serial.print(Sensor.getRed());
-  // Serial.print("] IR[");
-  // Serial.print(Sensor.getIR());
-  // Serial.print("] G[");
-  // Serial.print(Sensor.getGreen());
-  // Serial.print("]");
-  // Serial.println();
-}
-
-
-void hearterate_detect() {
-   
-    irValue = Sensor.getIR();
-
-    if (checkForBeat(irValue) == true)
-    {
-      //We sensed a beat!
-      long delta = millis() - lastBeat;
-      lastBeat = millis();
-  
-      beatsPerMinute = 60 / (delta / 1000.0);
-  
-      if (beatsPerMinute < 255 && beatsPerMinute > 20)
-      {
-        rates[rateSpot++] = (byte)beatsPerMinute; //Store this reading in the array
-        rateSpot %= RATE_SIZE; //Wrap variable
-  
-        //Take average of readings
-        beatAvg = 0;
-        for (byte x = 0 ; x < RATE_SIZE ; x++)
-          beatAvg += rates[x];
-        beatAvg /= RATE_SIZE;
-      }
+    uint16_t ir, red;
+    // reset the sensor buffer by clean the data in FIFO
+    if (flag_Reset) {
+        Sensor.clearFIFO();
+        delay(5);
+        flag_Reset = 0;
     }
-  
-    Serial.print("IR=");
-    Serial.print(irValue);
-    Serial.print(", BPM=");
-    Serial.print(beatsPerMinute);
-    Serial.print(", Avg BPM=");
-    Serial.print(beatAvg);
-  
-    if (irValue < 50000)
-      Serial.print(" No finger?");
-  
-    Serial.println();
+    while (flag_Reset == 0) {
+        while (Sensor.available() == false) {
+            delay(10);
+            Sensor.check();
+        }
+        while (1) {
+            red = Sensor.getRed();
+            ir  = Sensor.getIR();
+            if ((ir > 1000) && (red > 1000)) {
+                num_fail = 0;
+                t1 = millis();
+
+                // push the data into the buffer
+                redBuffer[(red_pos + 100) % 100] = red;
+                irBuffer[(ir_pos + 100) % 100]   = ir;
+
+                // calculate the heart rate
+                t2 = millis();
+                Program_freq++;
+                if (checkForBeat(ir) == true) {
+                    long delta = millis() - last_beat - (t2 - t1) * (Program_freq - 1);
+                    last_beat = millis();
+
+                    Program_freq   = 0;
+                    beatsPerMinute = 60 / (delta / 1000.0);
+                    if ((beatsPerMinute > 30) && (beatsPerMinute < 120)) {
+                        rate_begin++;
+                        if ((abs(beatsPerMinute - beatAvg) > 15) &&
+                            ((beatsPerMinute < 55) || (beatsPerMinute > 95)))
+                            beatsPerMinute =
+                                beatAvg * 0.9 + beatsPerMinute * 0.1;
+                        if ((abs(beatsPerMinute - beatAvg) > 10) &&
+                            (beatAvg > 60) &&
+                            ((beatsPerMinute < 65) || (beatsPerMinute > 90)))
+                            beatsPerMinute =
+                                beatsPerMinute * 0.4 + beatAvg * 0.6;
+
+                        rates[rateSpot++] = (byte)
+                            beatsPerMinute;  // Store this reading in the array
+                        rateSpot %= RATE_SIZE;  // Wrap variable
+
+                        // Take average of readings
+                        beatAvg = 0;
+                        if ((beatsPerMinute == 0) && (heartRate > 60) &&
+                            (heartRate < 90))
+                            beatsPerMinute = heartRate;
+                        if (rate_begin > RATE_SIZE) {
+                            for (byte x = 0; x < RATE_SIZE; x++)
+                                beatAvg += rates[x];
+                            beatAvg /= RATE_SIZE;
+                        } else {
+                            for (byte x = 0; x < rate_begin; x++)
+                                beatAvg += rates[x];
+                            beatAvg /= rate_begin;
+                        }
+                    }
+                }
+            }
+            else {
+                num_fail++;
+            }
+            line[0][(red_pos + 240) % 320] = (red_last_raw * (256 - Alpha) + red * Alpha) / 256;
+            line[1][(ir_pos + 240) % 320] = (ir_last_raw * (256 - Alpha) + ir * Alpha) / 256;
+
+            red_last_raw = line[0][(red_pos + 240) % 320];
+            ir_last_raw  = line[1][(ir_pos + 240) % 320];
+            red_pos++;
+            ir_pos++;
+
+            if ((Sensor.check() == false) || flag_Reset) break;
+        }
+
+        Sensor.clearFIFO();
+        for (int i = 0; i < 240; i++) {
+            if (i == 0) {
+                red_max = red_min = line[0][(red_pos + i) % 320];
+                ir_max = ir_min = line[1][(ir_pos + i) % 320];
+            } 
+            else {
+                red_max = (line[0][(red_pos + i) % 320] > red_max)
+                              ? line[0][(red_pos + i) % 320]
+                              : red_max;
+                red_min = (line[0][(red_pos + i) % 320] < red_min)
+                              ? line[0][(red_pos + i) % 320]
+                              : red_min;
+
+                ir_max = (line[1][(ir_pos + i) % 320] > ir_max)
+                             ? line[1][(ir_pos + i) % 320]
+                             : ir_max;
+                ir_min = (line[1][(ir_pos + i) % 320] < ir_min)
+                             ? line[1][(ir_pos + i) % 320]
+                             : ir_min;
+            }
+            if (flag_Reset) break;
+        }
+
+        Disbuff.fillRect(0, 0, 240, 135, BLACK);
+
+        for (int i = 0; i < 240; i++) {
+            red_disdata = map(line[0][(red_pos + i) % 320], red_max, red_min, 0, 135);
+            ir_disdata = map(line[1][(ir_pos + i) % 320], ir_max, ir_min, 0, 135);
+            {
+                Disbuff.drawLine(i, red_last, i + 1, red_disdata, RED);
+                Disbuff.drawLine(i, ir_last, i + 1, ir_disdata, BLUE);
+            }
+            ir_last  = ir_disdata;
+            red_last = red_disdata;
+            if (flag_Reset) break;
+        }
+        old_spo2 = spo2;
+        if (red_pos > 100)
+            maxim_heart_rate_and_oxygen_saturation(irBuffer, bufferLength,
+                                                   redBuffer, &spo2, &validSPO2,
+                                                   &heartRate, &validHeartRate);
+        if (!validSPO2) spo2 = old_spo2;
+        display_info();
+    }
 }
 
-void mqtt_setup() {
-  mqtt_client.setServer(MQTT_SERVER,1883);
-  mqtt_client.setCallback(on_message);
-  mqtt_client.connect(MQTT_DOMAIN);
-  mqtt_client.subscribe(MQTT_SUPSCRIPTION);
-  Serial.println("Conneted to MQTT broker");
-}
-
-void on_message(char* topic, byte* payload, unsigned int length) {
-  char buf[200];
-  memcpy(buf, payload, length);
-  buf[length] = '\0';
-  Serial.printf("Received message from topic %s: %s\n", topic, buf);
-  deserializeJson(doc, buf);
-  if (doc["cmd"] == "listen") {
-  // do something
-  Serial.println("Start listening");
-  doc.clear();
-  doc["status"] = "200";
-  doc["irValue"] = irValue;
-  doc["BPM"] = beatsPerMinute;
-  doc["BPM_Average"] = beatAvg;
-  doc["No Finger"] = irValue < 50000;
-  // for (int i = 0; i < 12; i++) {
-  //   doc["party_values"].add(bin[i]);
-  // }
-  serializeJson(doc, buf);
-  mqtt_client.publish(MQTT_SUPSCRIPTION, buf);
+void display_info() {
+  Disbuff.setTextSize(1);
+  Disbuff.setTextColor(RED);
+  Disbuff.setCursor(5, 5);
+  Disbuff.printf("red:%d,%d,%d", red_max, red_min, red_max - red_min);
+  Disbuff.setTextColor(BLUE);
+  Disbuff.setCursor(5, 15);
+  Disbuff.printf("ir:%d,%d,%d", ir_max, ir_min, ir_max - ir_min);
+  Disbuff.setCursor(5, 25);
+  if (num_fail < 10) {
+      Disbuff.setTextColor(GREEN);
+      Disbuff.printf("spo2:%d,", spo2);
+      Disbuff.setCursor(60, 25);
+      Disbuff.printf(" BPM:%d", beatAvg);
+  } else {
+      Disbuff.setTextColor(RED);
+      Disbuff.printf("No Finger!!");
   }
+  Disbuff.pushSprite(0, 0);
 }
