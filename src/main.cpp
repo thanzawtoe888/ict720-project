@@ -1,7 +1,6 @@
 // #include <Arduino.h>
 // #include <M5StickC.h>
 // #include "power.h"
-// #include "utility/NetworkModule.h"
 
 // NetworkModule network_module;
 
@@ -85,7 +84,7 @@ void callBack(void) {
 }
 
 void setup() {
-    // init
+    // init M5
     M5.begin();                 // initialize M5StickCPlus
     Serial.begin(115200);       // initialize serial communication
     pinMode(25, INPUT_PULLUP);  // set pin mode
@@ -105,18 +104,13 @@ void setup() {
 
     // initialize Sensor
     if (!Sensor.begin(Wire, I2C_SPEED_FAST)) {
-        // init fail
         M5.Lcd.print("Init Failed");
         Serial.println(F("MAX30102 was not found. Please check wiring/power."));
         while (1);
     }
-    Serial.println(
-        F("Place your index finger on the Sensor with steady pressure"));
-
+    Serial.println(F("Place your index finger on the Sensor with steady pressure"));
     attachInterrupt(Button_A, callBack, FALLING);
-    // set Max30102
     Sensor.setup();
-    // Sensor.clearFIFO();
 }
 
 void loop() {
@@ -132,7 +126,7 @@ void loop() {
             delay(10);
             Sensor.check();
         }
-        while (1) {
+        while (true) {
             red = Sensor.getRed();
             ir  = Sensor.getIR();
             if ((ir > 1000) && (red > 1000)) {
@@ -154,24 +148,17 @@ void loop() {
                     beatsPerMinute = 60 / (delta / 1000.0);
                     if ((beatsPerMinute > 30) && (beatsPerMinute < 120)) {
                         rate_begin++;
-                        if ((abs(beatsPerMinute - beatAvg) > 15) &&
-                            ((beatsPerMinute < 55) || (beatsPerMinute > 95)))
-                            beatsPerMinute =
-                                beatAvg * 0.9 + beatsPerMinute * 0.1;
+                        if ((abs(beatsPerMinute - beatAvg) > 15) && ((beatsPerMinute < 55) || (beatsPerMinute > 95)))
+                            beatsPerMinute = beatAvg * 0.9 + beatsPerMinute * 0.1;
                         if ((abs(beatsPerMinute - beatAvg) > 10) &&
-                            (beatAvg > 60) &&
-                            ((beatsPerMinute < 65) || (beatsPerMinute > 90)))
-                            beatsPerMinute =
-                                beatsPerMinute * 0.4 + beatAvg * 0.6;
-
-                        rates[rateSpot++] = (byte)
-                            beatsPerMinute;  // Store this reading in the array
+                            (beatAvg > 60) && ((beatsPerMinute < 65) || (beatsPerMinute > 90)))
+                            beatsPerMinute = beatsPerMinute * 0.4 + beatAvg * 0.6;
+                        rates[rateSpot++] = (byte) beatsPerMinute;  // Store this reading in the array
                         rateSpot %= RATE_SIZE;  // Wrap variable
 
                         // Take average of readings
                         beatAvg = 0;
-                        if ((beatsPerMinute == 0) && (heartRate > 60) &&
-                            (heartRate < 90))
+                        if ((beatsPerMinute == 0) && (heartRate > 60) && (heartRate < 90))
                             beatsPerMinute = heartRate;
                         if (rate_begin > RATE_SIZE) {
                             for (byte x = 0; x < RATE_SIZE; x++)
@@ -190,12 +177,10 @@ void loop() {
             }
             line[0][(red_pos + 240) % 320] = (red_last_raw * (256 - Alpha) + red * Alpha) / 256;
             line[1][(ir_pos + 240) % 320] = (ir_last_raw * (256 - Alpha) + ir * Alpha) / 256;
-
             red_last_raw = line[0][(red_pos + 240) % 320];
             ir_last_raw  = line[1][(ir_pos + 240) % 320];
             red_pos++;
             ir_pos++;
-
             if ((Sensor.check() == false) || flag_Reset) break;
         }
 
