@@ -67,8 +67,7 @@ byte num_fail;
 uint16_t line[2][320] = {0};
 
 uint32_t red_pos = 0, ir_pos = 0;
-uint16_t ir_max = 0, red_max = 0, ir_min = 0, red_min = 0, ir_last = 0,
-         red_last    = 0;
+uint16_t ir_max = 0, red_max = 0, ir_min = 0, red_min = 0, ir_last = 0, red_last = 0;
 uint16_t ir_last_raw = 0, red_last_raw = 0;
 uint16_t ir_disdata, red_disdata;
 uint16_t Alpha = 0.3 * 256;
@@ -150,8 +149,7 @@ void loop() {
                         rate_begin++;
                         if ((abs(beatsPerMinute - beatAvg) > 15) && ((beatsPerMinute < 55) || (beatsPerMinute > 95)))
                             beatsPerMinute = beatAvg * 0.9 + beatsPerMinute * 0.1;
-                        if ((abs(beatsPerMinute - beatAvg) > 10) &&
-                            (beatAvg > 60) && ((beatsPerMinute < 65) || (beatsPerMinute > 90)))
+                        if ((abs(beatsPerMinute - beatAvg) > 10) && (beatAvg > 60) && ((beatsPerMinute < 65) || (beatsPerMinute > 90)))
                             beatsPerMinute = beatsPerMinute * 0.4 + beatAvg * 0.6;
                         rates[rateSpot++] = (byte) beatsPerMinute;  // Store this reading in the array
                         rateSpot %= RATE_SIZE;  // Wrap variable
@@ -183,73 +181,63 @@ void loop() {
             ir_pos++;
             if ((Sensor.check() == false) || flag_Reset) break;
         }
-
         Sensor.clearFIFO();
-        for (int i = 0; i < 240; i++) {
-            if (i == 0) {
-                red_max = red_min = line[0][(red_pos + i) % 320];
-                ir_max = ir_min = line[1][(ir_pos + i) % 320];
-            } 
-            else {
-                red_max = (line[0][(red_pos + i) % 320] > red_max)
-                              ? line[0][(red_pos + i) % 320]
-                              : red_max;
-                red_min = (line[0][(red_pos + i) % 320] < red_min)
-                              ? line[0][(red_pos + i) % 320]
-                              : red_min;
-
-                ir_max = (line[1][(ir_pos + i) % 320] > ir_max)
-                             ? line[1][(ir_pos + i) % 320]
-                             : ir_max;
-                ir_min = (line[1][(ir_pos + i) % 320] < ir_min)
-                             ? line[1][(ir_pos + i) % 320]
-                             : ir_min;
-            }
-            if (flag_Reset) break;
-        }
-
-        Disbuff.fillRect(0, 0, 240, 135, BLACK);
-
-        for (int i = 0; i < 240; i++) {
-            red_disdata = map(line[0][(red_pos + i) % 320], red_max, red_min, 0, 135);
-            ir_disdata = map(line[1][(ir_pos + i) % 320], ir_max, ir_min, 0, 135);
-            {
-                Disbuff.drawLine(i, red_last, i + 1, red_disdata, RED);
-                Disbuff.drawLine(i, ir_last, i + 1, ir_disdata, BLUE);
-            }
-            ir_last  = ir_disdata;
-            red_last = red_disdata;
-            if (flag_Reset) break;
-        }
-        old_spo2 = spo2;
-        if (red_pos > 100)
-            maxim_heart_rate_and_oxygen_saturation(irBuffer, bufferLength,
-                                                   redBuffer, &spo2, &validSPO2,
-                                                   &heartRate, &validHeartRate);
-        if (!validSPO2) spo2 = old_spo2;
         display_info();
     }
 }
 
 void display_info() {
-  Disbuff.setTextSize(1);
-  Disbuff.setTextColor(RED);
-  Disbuff.setCursor(5, 5);
-  Disbuff.printf("red:%d,%d,%d", red_max, red_min, red_max - red_min);
-  Disbuff.setTextColor(BLUE);
-  Disbuff.setCursor(5, 15);
-  Disbuff.printf("ir:%d,%d,%d", ir_max, ir_min, ir_max - ir_min);
-  Disbuff.setCursor(5, 25);
-  if (num_fail < 10) {
-      Disbuff.setTextColor(GREEN);
-      Disbuff.printf("spo2:%d,", spo2);
-      Disbuff.setCursor(60, 25);
-      Disbuff.printf(" BPM:%d", beatAvg);
-  } else {
-      Disbuff.setTextColor(RED);
-      Disbuff.printf("No Finger!!");
-  }
-  Disbuff.pushSprite(0, 0);
+    for (int i = 0; i < 240; i++) {
+        if (i == 0) {
+            red_max = red_min = line[0][(red_pos + i) % 320];
+            ir_max = ir_min = line[1][(ir_pos + i) % 320];
+        } 
+        else {
+            red_max = (line[0][(red_pos + i) % 320] > red_max)? line[0][(red_pos + i) % 320] : red_max;
+            red_min = (line[0][(red_pos + i) % 320] < red_min)? line[0][(red_pos + i) % 320] : red_min;
+            ir_max = (line[1][(ir_pos + i) % 320] > ir_max) ? line[1][(ir_pos + i) % 320] : ir_max;
+            ir_min = (line[1][(ir_pos + i) % 320] < ir_min) ? line[1][(ir_pos + i) % 320] : ir_min;
+        }
+        if (flag_Reset) break;
+    }
+    Disbuff.fillRect(0, 0, 240, 135, BLACK);
+
+    for (int i = 0; i < 240; i++) {
+        red_disdata = map(line[0][(red_pos + i) % 320], red_max, red_min, 0, 135);
+        ir_disdata = map(line[1][(ir_pos + i) % 320], ir_max, ir_min, 0, 135);
+        {
+            Disbuff.drawLine(i, red_last, i + 1, red_disdata, RED);
+            Disbuff.drawLine(i, ir_last, i + 1, ir_disdata, BLUE);
+        }
+        ir_last  = ir_disdata;
+        red_last = red_disdata;
+        if (flag_Reset) break;
+    }
+    old_spo2 = spo2;
+    if (red_pos > 100)
+        maxim_heart_rate_and_oxygen_saturation(irBuffer, bufferLength,
+                                               redBuffer, &spo2, &validSPO2,
+                                               &heartRate, &validHeartRate);
+    if (!validSPO2) spo2 = old_spo2;
+
+    Disbuff.setTextSize(1);
+    Disbuff.setTextColor(RED);
+    Disbuff.setCursor(5, 5);
+    Disbuff.printf("red:%d,%d,%d", red_max, red_min, red_max - red_min);
+    Disbuff.setTextColor(BLUE);
+    Disbuff.setCursor(5, 15);
+    Disbuff.printf("ir:%d,%d,%d", ir_max, ir_min, ir_max - ir_min);
+    Disbuff.setCursor(5, 25);
+    if (num_fail < 10) {
+        Disbuff.setTextColor(GREEN);
+        Disbuff.printf("spo2:%d,", spo2);
+        Disbuff.setCursor(60, 25);
+        Disbuff.printf(" BPM:%d", beatAvg);
+    } else {
+        Disbuff.setTextColor(RED);
+        Disbuff.printf("No Finger!!");
+    }
+    Disbuff.pushSprite(0, 0);
 }
 
 void connectWifi() {
