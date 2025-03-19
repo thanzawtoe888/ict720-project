@@ -28,7 +28,7 @@
 
 
 // Function: Detection of heart rate and blood oxygen concentration
-// Units used: M5StickCPlus, Heart(MAX30102)
+// Units used: M5StickCP, Heart(MAX30102)
 // please install MAX3010x lib for MAX30102 by library manager first
 // addr: https://github.com/sparkfun/SparkFun_MAX3010x_Sensor_Library
 #include <M5StickC.h>
@@ -36,6 +36,12 @@
 #include "MAX30105.h"
 #include "heartRate.h"
 #include "spo2_algorithm.h"
+
+#include <WiFi.h>
+#include <WiFiMulti.h>
+
+const char *ssid     = "NHAT-LAPTOP 9118";
+const char *password = "chachacha123";
 
 TFT_eSprite Disbuff = TFT_eSprite(&M5.Lcd);
 MAX30105 Sensor;
@@ -70,6 +76,7 @@ uint16_t Alpha = 0.3 * 256;
 uint32_t t1, t2, last_beat, Program_freq;
 
 void display_info();
+void connectWifi();
 
 void callBack(void) {
     V_Button = digitalRead(Button_A);
@@ -92,6 +99,9 @@ void setup() {
     Disbuff.createSprite(240, 135);
     Disbuff.setSwapBytes(true);
     Disbuff.createSprite(240, 135);
+
+    // set WiFi
+    connectWifi();
 
     // initialize Sensor
     if (!Sensor.begin(Wire, I2C_SPEED_FAST)) {
@@ -255,4 +265,23 @@ void display_info() {
       Disbuff.printf("No Finger!!");
   }
   Disbuff.pushSprite(0, 0);
+}
+
+void connectWifi() {
+    WiFiMulti WiFiMulti;
+    int sum = 0;
+    M5.begin();             // Init M5StickC.
+    M5.Lcd.setRotation(3);  // Rotate the screen.
+    WiFiMulti.addAP(ssid, password);  // Add wifi configuration information.
+    M5.lcd.printf("Waiting connect to WiFi: %s ...", ssid);  // Serial port output format string.
+    while (WiFiMulti.run() != WL_CONNECTED) {  // If the connection to wifi is not established successfully.
+        M5.lcd.print(".");
+        delay(1000);
+        sum += 1;
+        if (sum == 8) M5.lcd.print("Conncet failed!");
+    }
+    M5.lcd.println("\nWiFi connected");
+    M5.lcd.print("IP address: ");
+    M5.lcd.println(WiFi.localIP());
+    delay(1000);
 }
