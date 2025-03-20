@@ -25,13 +25,17 @@ mongo_client = MongoClient(mongo_uri)
 def on_connect(client, userdata, flags, reason_code, properties):
     print(f"Connected with result code {reason_code}")
     # Subscribing in on_connect() means that if we lose the connection and
-    # reconnect then subscriptions will be renewed.
+    # reconnect then subscriptions will be renewed.  
     client.subscribe(mqtt_topic + "#")
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
     # data message
+    if msg.topic.split('/')[-1] == "request":
+        client.publish("ict720/group8/user_list", "test")
+    
+    
     if msg.topic.split('/')[-1] == "register":
         data = json.loads(msg.payload.decode())
         

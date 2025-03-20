@@ -109,7 +109,7 @@ void setup() {
         
         if (client.connect(clientId.c_str())) {
         M5.Lcd.println("Connected to MQTT");
-        client.subscribe("ict720/#"); // Subscribe to topic
+        client.subscribe("ict720/group8/user_list"); // Subscribe to topic
         } else {
         M5.Lcd.print("Failed, rc=");
         M5.Lcd.println(client.state());
@@ -118,6 +118,7 @@ void setup() {
     }
     // Stay in loop until the first message is received
     while (!userMessageReceived) {
+        client.publish("ict720/group8/request", "users list needed");
         client.loop(); // Keep the connection alive and check for new messages
     }
     selectUser();
