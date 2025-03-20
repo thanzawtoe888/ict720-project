@@ -32,6 +32,31 @@ def on_connect(client, userdata, flags, reason_code, properties):
 def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
     # data message
+    if msg.topic.split('/')[-1] == "register":
+        data = json.loads(msg.payload.decode())
+        
+        # Get row count before insertion
+        c.execute("SELECT COUNT(*) FROM group8")
+        row_count = c.fetchone()[0]  # Fetch the count result
+
+        # insert to SQLite
+        first_name = data['first_name']
+        last_name = data['last_name']
+        user_id = row_count
+        c.execute("INSERT INTO users (user_id, first_name, last_name) VALUES (?, ?, ?)", (user_id, first_name, last_name))
+        print("Inserted to SQLite")
+        conn.commit()
+        
+        # insert to MongoDB
+        db = mongo_client[mongo_db]
+        db_dev_col = db[mongo_col_device]
+        db_dev_col.insert_one({"timestamp": datetime.now(), 
+                               "user_id": user_id,
+                               "first_name": first_name, 
+                               "last_name": last_name})
+        print(db_dev_col.count_documents({}))
+        print("Inserted to MongoDB")
+        
     if msg.topic.split('/')[-1] == "data":
         data = json.loads(msg.payload.decode())
         
@@ -52,16 +77,49 @@ def on_message(client, userdata, msg):
         print(db_dev_col.count_documents({}))
         print("Inserted to MongoDB")
 
-# init SQLite
+# # init SQLite
+# conn = sqlite3.connect('group8.db')
+# c = conn.cursor()
+# c.execute('''CREATE TABLE IF NOT EXISTS group8 (
+#           _id INTEGER PRIMARY KEY AUTOINCREMENT,
+#           timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+#           user_id STRING,
+#           spo2 INTEGER,
+#           bpm INTEGER
+#           )''')
+# conn.commit()
+
+
+# Initialize SQLite
 conn = sqlite3.connect('group8.db')
 c = conn.cursor()
-c.execute('''CREATE TABLE IF NOT EXISTS group8 (
-          _id INTEGER PRIMARY KEY AUTOINCREMENT,
-          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-          user_id STRING,
-          spo2 INTEGER,
-          bpm INTEGER
-          )''')
+
+# Enable foreign keys (optional but recommended)
+c.execute("PRAGMA foreign_keys = ON;")
+
+c.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        _id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        user_id TEXT UNIQUE NOT NULL,
+        first_name TEXT,
+        last_name TEXT,
+        age INTEGER,
+        height INTEGER,
+        weight INTEGER,
+        emergency_contact TEXT
+    )''')
+conn.commit()
+
+c.execute('''
+    CREATE TABLE IF NOT EXISTS group8 (
+        _id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        user_id TEXT NOT NULL,
+        spo2 INTEGER,
+        bpm INTEGER,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    )''')
 conn.commit()
 
 # init MQTT
