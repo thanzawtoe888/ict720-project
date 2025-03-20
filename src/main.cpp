@@ -75,6 +75,7 @@ uint32_t t1, t2, last_beat, Program_freq;
 
 void display_info();
 void connectWifi();
+void selectUser();
 
 void callBack(void) {
     V_Button = digitalRead(Button_A);
@@ -100,6 +101,9 @@ void setup() {
 
     // set WiFi
     connectWifi();
+
+    // select user
+    selectUser();
 
     // initialize Sensor
     if (!Sensor.begin(Wire, I2C_SPEED_FAST)) {
@@ -252,7 +256,49 @@ void connectWifi() {
         if (sum == 8) M5.lcd.print("Conncet failed!");
     }
     M5.lcd.println("\nWiFi connected");
-    M5.lcd.print("IP address: ");
-    M5.lcd.println(WiFi.localIP());
-    delay(1000);
+    M5.lcd.print("IP: ");
+    M5.lcd.println(WiFi.localIP());  
+    delay(3000);
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setCursor(0, 0);
+}
+
+void selectUser() {
+    M5.Lcd.println("Please select your user:");
+    M5.Lcd.println("1. Nhat");
+    M5.Lcd.println("2. Luca");
+    M5.Lcd.println("3. Narodom");
+    M5.Lcd.println("4. Supachai");
+    M5.Lcd.println("Press btn A to move and hold it to select.");
+    int i = 0;
+    while (1) {
+        // M5.update();  // Read the press state of the key.
+        // if (M5.BtnA.wasReleased()) {  // If the button A is pressed.  如果按键 A 被按下
+        //     if (i > 3) i = 1;
+        //     M5.Lcd.setCursor(0, 100);
+        //     M5.Lcd.printf("User %d", i);
+        //     delay(500);
+        // } 
+        // else if (M5.BtnA.wasReleasefor(700)) { 
+        //     M5.Lcd.setCursor(0, 120);
+        //     M5.Lcd.printf("User %d selected", i);
+        //     M5.Lcd.setCursor(0, 0);
+        //     break;
+        // }
+
+        M5.update();  // Read the press state of the key.  读取按键 A, B, C 的状态
+        if (M5.BtnA.wasReleased()) {  // If the button A is pressed.  如果按键 A 被按下
+            M5.Lcd.setCursor(7, 70);
+            i++;
+            if (i > 3) i = 1;
+            M5.Lcd.printf("Select user %d?", i);
+        } 
+        else if (M5.BtnA.wasReleasefor(700)) {
+            M5.Lcd.fillScreen(BLACK);
+            M5.Lcd.setCursor(0, 0);
+            M5.Lcd.printf("Hello user %d!!!!\n", i);
+            delay(3000);
+            break;
+        }
+    }
 }

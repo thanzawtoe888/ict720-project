@@ -34,7 +34,7 @@ def on_message(client, userdata, msg):
     # data message
     if msg.topic.split('/')[-1] == "data":
         data = json.loads(msg.payload.decode())
-        # print(f"Device: {data['name']}")
+        
         # insert to SQLite
         spo2 = data['spo2']
         bpm = data['bpm']
