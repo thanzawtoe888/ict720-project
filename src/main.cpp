@@ -1,31 +1,3 @@
-// #include <Arduino.h>
-// #include <M5StickC.h>
-// #include "power.h"
-
-// NetworkModule network_module;
-
-// void setup() {
-//   M5.begin();
-//   M5.Lcd.println("Press Btn B to power off.\n");
-//   Serial.begin(115200);
-//   delay(1000);  // Add delay to give time for Serial Monitor to open
-//   Serial.println("Starting setup...");  // This will print in the Serial Monitor
-//   network_module.connect();
-// }
-
-// void loop() {
-//   if (M5.BtnB.wasPressed()) {
-//     powerOff();
-//   }
-//   M5.update();
-//   delay(2000);
-//   Serial.printf("Is network connected: %d\n", network_module.isConnected());
-// }
-
-
-
-
-
 // Function: Detection of heart rate and blood oxygen concentration
 // Units used: M5StickCP, Heart(MAX30102)
 // please install MAX3010x lib for MAX30102 by library manager first
@@ -38,9 +10,14 @@
 
 #include <WiFi.h>
 #include <WiFiMulti.h>
+#include <PubSubClient.h>
 
 const char *ssid     = "NHAT-LAPTOP 9118";
 const char *password = "chachacha123";
+const char* mqtt_server = "192.168.207.187";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 TFT_eSprite Disbuff = TFT_eSprite(&M5.Lcd);
 MAX30105 Sensor;
@@ -73,9 +50,29 @@ uint16_t ir_disdata, red_disdata;
 uint16_t Alpha = 0.3 * 256;
 uint32_t t1, t2, last_beat, Program_freq;
 
+
+
+
+
+
+
+
+unsigned long lastMsg = 0;
+#define MSG_BUFFER_SIZE (50)
+char msg[MSG_BUFFER_SIZE];
+bool userMessageReceived = false; // Flag to track if the message is received
+
+
+
+
+
+
 void display_info();
 void connectWifi();
 void selectUser();
+void callback(char* topic, byte* payload, unsigned int length);
+void reConnect();
+void cleanScreen();
 
 void callBack(void) {
     V_Button = digitalRead(Button_A);
@@ -99,11 +96,32 @@ void setup() {
     Disbuff.setSwapBytes(true);
     Disbuff.createSprite(240, 135);
 
-    // set WiFi
+    // set WiFi & MQTT
     connectWifi();
+    client.setServer(mqtt_server, 1883);
+    client.setCallback(callback);  
 
-    // select user
+    // Connect to MQTT broker and subscribe to the topic
+    while (!client.connected()) {
+        M5.Lcd.print("Attempting MQTT connection...");
+        String clientId = "M5Stack-";
+        clientId += String(random(0xffff), HEX);
+        
+        if (client.connect(clientId.c_str())) {
+        M5.Lcd.println("Connected to MQTT");
+        client.subscribe("ict720/#"); // Subscribe to topic
+        } else {
+        M5.Lcd.print("Failed, rc=");
+        M5.Lcd.println(client.state());
+        delay(5000); // Wait for 5 seconds before retrying
+        }
+    }
+    // Stay in loop until the first message is received
+    while (!userMessageReceived) {
+        client.loop(); // Keep the connection alive and check for new messages
+    }
     selectUser();
+
 
     // initialize Sensor
     if (!Sensor.begin(Wire, I2C_SPEED_FAST)) {
@@ -187,6 +205,26 @@ void loop() {
         }
         Sensor.clearFIFO();
         display_info();
+
+
+        if (!client.connected()) {
+            reConnect();
+        }
+        client.loop();
+    
+        // unsigned long now = millis();
+        // if (now - lastMsg > 2000) {
+        //     lastMsg = now;
+        //     ++value;
+        //     snprintf(msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
+        //     M5.Lcd.print("Publish message: ");
+        //     M5.Lcd.println(msg);
+        //     client.publish("M5Stack", msg);
+        //     if (value % 4 == 0) {
+        //         M5.Lcd.fillScreen(BLACK);
+        //         M5.Lcd.setCursor(0, 0);
+        //     }
+        // }
     }
 }
 
@@ -259,11 +297,11 @@ void connectWifi() {
     M5.lcd.print("IP: ");
     M5.lcd.println(WiFi.localIP());  
     delay(3000);
-    M5.Lcd.fillScreen(BLACK);
-    M5.Lcd.setCursor(0, 0);
+    cleanScreen();
 }
 
 void selectUser() {
+    cleanScreen();
     M5.Lcd.println("Please select your user:");
     M5.Lcd.println("1. Nhat");
     M5.Lcd.println("2. Luca");
@@ -272,33 +310,53 @@ void selectUser() {
     M5.Lcd.println("Press btn A to move and hold it to select.");
     int i = 0;
     while (1) {
-        // M5.update();  // Read the press state of the key.
-        // if (M5.BtnA.wasReleased()) {  // If the button A is pressed.  如果按键 A 被按下
-        //     if (i > 3) i = 1;
-        //     M5.Lcd.setCursor(0, 100);
-        //     M5.Lcd.printf("User %d", i);
-        //     delay(500);
-        // } 
-        // else if (M5.BtnA.wasReleasefor(700)) { 
-        //     M5.Lcd.setCursor(0, 120);
-        //     M5.Lcd.printf("User %d selected", i);
-        //     M5.Lcd.setCursor(0, 0);
-        //     break;
-        // }
-
-        M5.update();  // Read the press state of the key.  读取按键 A, B, C 的状态
-        if (M5.BtnA.wasReleased()) {  // If the button A is pressed.  如果按键 A 被按下
+        M5.update();
+        if (M5.BtnA.wasReleased()) {
             M5.Lcd.setCursor(7, 70);
             i++;
             if (i > 3) i = 1;
             M5.Lcd.printf("Select user %d?", i);
         } 
         else if (M5.BtnA.wasReleasefor(700)) {
-            M5.Lcd.fillScreen(BLACK);
-            M5.Lcd.setCursor(0, 0);
+            cleanScreen();
             M5.Lcd.printf("Hello user %d!!!!\n", i);
             delay(3000);
             break;
         }
     }
+}
+
+void callback(char* topic, byte* payload, unsigned int length) {
+    M5.Lcd.print("Message arrived [");
+    M5.Lcd.print(topic);
+    M5.Lcd.print("] ");
+    for (int i = 0; i < length; i++) {
+        M5.Lcd.print((char)payload[i]);
+    }
+    M5.Lcd.println();
+    userMessageReceived = true;  
+}
+
+void reConnect() {
+    while (!client.connected()) {
+        M5.Lcd.print("Attempting MQTT connection...");
+        // Create a random client ID.
+        String clientId = "M5Stack-";
+        clientId += String(random(0xffff), HEX);
+        // Attempt to connect.
+        if (client.connect(clientId.c_str())) {
+            M5.Lcd.printf("\nSuccess\n");
+        } 
+        else {
+            M5.Lcd.print("failed, rc=");
+            M5.Lcd.print(client.state());
+            M5.Lcd.println("try again in 5 seconds");
+            delay(5000);
+        }
+    }
+}
+
+void cleanScreen() {
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setCursor(0, 0);
 }
