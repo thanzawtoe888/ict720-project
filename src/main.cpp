@@ -14,7 +14,7 @@
 
 const char *ssid     = "NHAT-LAPTOP 9118";
 const char *password = "chachacha123";
-const char* mqtt_server = "192.168.207.187";
+const char* mqtt_server = "172.18.20.231";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -69,7 +69,6 @@ bool userMessageReceived = false; // Flag to track if the message is received
 
 void display_info();
 void connectWifi();
-void selectUser();
 void callback(char* topic, byte* payload, unsigned int length);
 void reConnect();
 void cleanScreen();
@@ -108,20 +107,20 @@ void setup() {
         clientId += String(random(0xffff), HEX);
         
         if (client.connect(clientId.c_str())) {
-        M5.Lcd.println("Connected to MQTT");
-        client.subscribe("ict720/group8/user_list"); // Subscribe to topic
-        } else {
-        M5.Lcd.print("Failed, rc=");
-        M5.Lcd.println(client.state());
-        delay(5000); // Wait for 5 seconds before retrying
+            M5.Lcd.println("Connected to MQTT");
+            client.subscribe("ict720/group8/user_list"); // Subscribe to topic
+        } 
+        else {
+            M5.Lcd.print("Failed, rc=");
+            M5.Lcd.println(client.state());
+            delay(5000); // Wait for 5 seconds before retrying
         }
     }
     // Stay in loop until the first message is received
+    client.publish("ict720/group8/request", "users list needed");
     while (!userMessageReceived) {
-        client.publish("ict720/group8/request", "users list needed");
         client.loop(); // Keep the connection alive and check for new messages
     }
-    selectUser();
 
 
     // initialize Sensor
@@ -301,13 +300,33 @@ void connectWifi() {
     cleanScreen();
 }
 
-void selectUser() {
+void callback(char* topic, byte* payload, unsigned int length) {
+    userMessageReceived = true;  
     cleanScreen();
     M5.Lcd.println("Please select your user:");
-    M5.Lcd.println("1. Nhat");
-    M5.Lcd.println("2. Luca");
-    M5.Lcd.println("3. Narodom");
-    M5.Lcd.println("4. Supachai");
+
+    String message = "";
+    for (int i = 0; i < length; i++) {
+        message += (char)payload[i];
+    }
+    M5.Lcd.println(message);
+
+    // Count the number of users (rows) in the message
+    int user_count = 0;
+    for (int i = 0; i < message.length(); i++) {
+        if (message[i] == '\n') {
+        user_count++;
+        }
+    }
+    // Add one because the last line won't end with a newline character
+    if (message.length() > 0) {
+        user_count++;
+    }
+
+    // for (int i = 0; i < length; i++) {
+    //     M5.Lcd.print((char)payload[i]);
+    // }
+    // M5.Lcd.println();
     M5.Lcd.println("Press btn A to move and hold it to select.");
     int i = 0;
     while (1) {
@@ -315,7 +334,7 @@ void selectUser() {
         if (M5.BtnA.wasReleased()) {
             M5.Lcd.setCursor(7, 70);
             i++;
-            if (i > 3) i = 1;
+            if (i > user_count) i = 1;
             M5.Lcd.printf("Select user %d?", i);
         } 
         else if (M5.BtnA.wasReleasefor(700)) {
@@ -325,17 +344,6 @@ void selectUser() {
             break;
         }
     }
-}
-
-void callback(char* topic, byte* payload, unsigned int length) {
-    M5.Lcd.print("Message arrived [");
-    M5.Lcd.print(topic);
-    M5.Lcd.print("] ");
-    for (int i = 0; i < length; i++) {
-        M5.Lcd.print((char)payload[i]);
-    }
-    M5.Lcd.println();
-    userMessageReceived = true;  
 }
 
 void reConnect() {

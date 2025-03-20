@@ -11,6 +11,7 @@ from pymongo import MongoClient
 mongo_uri = os.getenv('MONGO_URI', None)
 mongo_db = os.getenv('MONGO_DB', None)
 mongo_col_device = os.getenv('MONGO_COL_DEV', None)
+mongo_col_user = os.getenv('MONGO_COL_USER', None)
 mqtt_broker = os.getenv('MQTT_BROKER', None)
 mqtt_port = os.getenv('MQTT_PORT', None)
 mqtt_topic = os.getenv('MQTT_TOPIC', None)
@@ -33,14 +34,18 @@ def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
     # data message
     if msg.topic.split('/')[-1] == "request":
-        client.publish("ict720/group8/user_list", "test")
-    
+        c.execute("SELECT * FROM users")
+        results = c.fetchall()  # This will return a list of tuples
+        print("Users in the database:")
+        # Format the data
+        formatted_data = "\n".join([f"{entry[0]}. {entry[3]} {entry[4]}" for entry in results]) 
+        client.publish("ict720/group8/user_list", formatted_data)
     
     if msg.topic.split('/')[-1] == "register":
         data = json.loads(msg.payload.decode())
         
         # Get row count before insertion
-        c.execute("SELECT COUNT(*) FROM group8")
+        c.execute("SELECT COUNT(*) FROM users")
         row_count = c.fetchone()[0]  # Fetch the count result
 
         # insert to SQLite
@@ -53,12 +58,12 @@ def on_message(client, userdata, msg):
         
         # insert to MongoDB
         db = mongo_client[mongo_db]
-        db_dev_col = db[mongo_col_device]
-        db_dev_col.insert_one({"timestamp": datetime.now(), 
+        db_user_col = db[mongo_col_user]
+        db_user_col.insert_one({"timestamp": datetime.now(), 
                                "user_id": user_id,
                                "first_name": first_name, 
                                "last_name": last_name})
-        print(db_dev_col.count_documents({}))
+        print(db_user_col.count_documents({}))
         print("Inserted to MongoDB")
         
     if msg.topic.split('/')[-1] == "data":
