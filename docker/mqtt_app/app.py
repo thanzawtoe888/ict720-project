@@ -38,13 +38,15 @@ def on_message(client, userdata, msg):
         # insert to SQLite
         spo2 = data['spo2']
         bpm = data['bpm']
-        c.execute("INSERT INTO taist (spo2, bpm) VALUES (?, ?)", (spo2, bpm))
+        user_id = data['user_id']
+        c.execute("INSERT INTO group8 (user_id, spo2, bpm) VALUES (?, ?, ?)", (user_id, spo2, bpm))
         print("Inserted to SQLite")
         conn.commit()
         # insert to MongoDB
         db = mongo_client[mongo_db]
         db_dev_col = db[mongo_col_device]
         db_dev_col.insert_one({"timestamp": datetime.now(), 
+                               "user_id": user_id,
                                "spo2": spo2, 
                                "bpm": bpm})
         print(db_dev_col.count_documents({}))
@@ -56,6 +58,7 @@ c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS group8 (
           _id INTEGER PRIMARY KEY AUTOINCREMENT,
           timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+          user_id STRING,
           spo2 INTEGER,
           bpm INTEGER
           )''')

@@ -14,14 +14,14 @@ services:
             - "5000:5000"
         depends_on:
             - mongo
-    bot_app:
-        build: ./bot_app
-        env_file:
-            - .env
-        ports:
-            - "8000:8000"
-        depends_on:
-            - mongo
+    # bot_app:
+    #     build: ./bot_app
+    #     env_file:
+    #         - .env
+    #     ports:
+    #         - "8000:8000"
+    #     depends_on:
+    #         - mongo
     mosquitto:
         image: eclipse-mosquitto
         ports:

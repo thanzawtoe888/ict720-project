@@ -1,4 +1,4 @@
 .pio
 .vscode
 .env
-.docker/mongo/data
+docker/mongo/data/
