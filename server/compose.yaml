@@ -1,13 +1,13 @@
 services:
     mqtt_app:
         container_name: mqtt-app  # Custom container name
-        build: ./MQTT_App
+        build: ./mqtt_app
         env_file:
             - .env
         depends_on:
             - mosquitto
             - mongo
-    rest_app:
+    api_app:
         build: ./api-app
         env_file:
             - .env
@@ -15,6 +15,11 @@ services:
             - "5000:5000"
         depends_on:
             - mongo
+    web:
+      container_name: web-app
+      build: ./web-app
+      ports:
+          - "3000:3000"
     # bot_app:
     #     build: ./bot_app
     #     env_file:
