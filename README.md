@@ -21,8 +21,8 @@ This is a health monitoring application that tracks the status of gym trainers i
   - Acceptance Criteria #2 I can press the emergency button to call medic.
 
 ## Sequence diagram
-![Flowchart of the application](images/flow_chart.png)
-![Hardware lists](images/hw.png)
+![Flowchart of the application](Images/flow_chart.png)
+![Hardware lists](Images/hw.png)
 
 ## Data format
 ```json

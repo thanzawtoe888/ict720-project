@@ -54,33 +54,5 @@ def query_station(user_id):
         print(resp['data'])
     return jsonify(resp)
 
-# # REST API: asset
-# @app.route('/api/asset/<asset_id>', methods=['GET'])
-# def query_asset(asset_id):
-#     resp = {}
-#     if asset_id is None:
-#         resp['status'] = 'error'
-#         resp['message'] = 'asset_id is required'
-#         return jsonify(resp)
-#     bpm_cond = int(request.args.get('bpm', 70))
-#     mins_cond = int(request.args.get('mins', 60))    
-#     # database connection
-#     db = mongo_client[mongo_db]
-#     db_dev_col = db[mongo_col_device]
-#     # choose only valid data, sort by timestamp
-#     docs = db_dev_col.find({"device": asset_id,
-#                             "timestamp": {"$gt": datetime.now() - timedelta(minutes=mins_cond)},
-#                             "bpm": {"$gt": bpm_cond}}).sort("timestamp", -1)
-#     resp['status'] = 'ok'
-#     resp['asset'] = asset_id
-#     resp['data'] = []
-#     for doc in docs:
-#         doc_data = {}
-#         doc_data['timestamp'] = doc['timestamp'].isoformat()
-#         doc_data['station'] = doc['station']
-#         doc_data['bpm'] = doc['bpm']
-#         resp['data'].append(doc_data)
-#     return jsonify(resp)
-
 if __name__ == "__main__":
     app.run(debug=True)

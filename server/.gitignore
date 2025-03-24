@@ -1,0 +1,11 @@
+# Ignore project-specific folders
+.pio/
+.vscode/
+.env
+mongo/data/
+
+# Ignore the same folders at any level in the project
+**/.pio/
+**/.vscode/
+**/.env/
+**/mongo/data/
