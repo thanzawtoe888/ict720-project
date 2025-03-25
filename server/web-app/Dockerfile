@@ -1,12 +1,7 @@
-FROM node:alpine
+FROM python:3.12
 
-WORKDIR /app
+WORKDIR /python-docker
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
 COPY . .
-
-# Install deps 
-RUN cd /app &&  npm install 
-
-# Build 
-RUN npm run build
-
-ENTRYPOINT [ "npm", "run", "start" ]
+CMD ["streamlit", "run", "app.py"]

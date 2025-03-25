@@ -20,11 +20,17 @@ services:
             - mongo
         networks:
           - mongo-bridge
-    web:
+    web_app:
       container_name: web-app
+      env_file:
+          - .env
       build: ./web-app
       ports:
-          - "3000:3000"
+          - "8501:8501"
+      depends_on:
+            - rest_app
+            # - bot_app
+            - mqtt_app
       networks:
           - mongo-bridge
     # bot_app:
