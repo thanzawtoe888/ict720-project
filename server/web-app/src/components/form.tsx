@@ -1,27 +1,27 @@
 import React from "react"
 
-interface InputField {
-  name: string
-  label: string
-  type?: string
-  placeholder?: string
-}
+// interface InputField {
+//   name: string
+//   label: string
+//   type?: string
+//   placeholder?: string
+// }
 
-interface FormProps {
-  fields: InputField[]
-  onSubmit: (data: Record<string, string>) => void
-}
+// interface FormProps {
+//   fields: InputField[]
+//   onSubmit: (data: Record<string, string>) => void
+// }
 
-const Form = ({ fields, onSubmit }: FormProps) => {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const data: Record<string, string> = {};
-    fields.forEach((field) => {
-      data[field.name] = formData.get(field.name) as string;
-    });
-    onSubmit(data);
-  };
+const Form = () => {
+//   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+//     e.preventDefault();
+//     const formData = new FormData(e.currentTarget);
+//     const data: Record<string, string> = {};
+//     fields.forEach((field) => {
+//       data[field.name] = formData.get(field.name) as string;
+//     });
+//     onSubmit(data);
+//   };
 
   return (
     <div className="border-b border-gray-900/10 pb-12">

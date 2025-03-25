@@ -7,19 +7,26 @@ services:
         depends_on:
             - mosquitto
             - mongo
-    api_app:
-        build: ./api-app
+        networks:
+          - mongo-bridge
+    rest_app:
+        container_name: rest-app  # Custom container name
+        build: ./rest-app
         env_file:
             - .env
         ports:
             - "5000:5000"
         depends_on:
             - mongo
+        networks:
+          - mongo-bridge
     web:
       container_name: web-app
       build: ./web-app
       ports:
           - "3000:3000"
+      networks:
+          - mongo-bridge
     # bot_app:
     #     build: ./bot_app
     #     env_file:
@@ -37,6 +44,8 @@ services:
             - ./mosquitto/config:/mosquitto/config
             - ./mosquitto/data:/mosquitto/data
             - ./mosquitto/log:/mosquitto/log
+        networks:
+          - mongo-bridge
     # Database - Mongo DB
     mongo:
         container_name: mongo  # Custom container name
