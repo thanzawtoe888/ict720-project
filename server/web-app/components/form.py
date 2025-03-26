@@ -44,8 +44,8 @@ def registration_form(api_url):
         }
 
         try:
-            print(api_url + "/add_user" + "  \n", user_data)
-            response = requests.post(api_url + "/add_user", json=user_data)
+            print(api_url + "/resgister" + "  \n", user_data)
+            response = requests.post(api_url + "/resgister", json=user_data)
             result = response.json()
 
             if response.status_code == 201:
@@ -55,3 +55,59 @@ def registration_form(api_url):
                 st.error(f"❌ Error: {result.get('error', 'Something went wrong')}")
         except requests.exceptions.RequestException as e:
             st.error(f"❌ Failed to connect to server: {e}")
+
+
+def edit_profile_form(api_url):
+    # Ensure the user is logged in
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        st.warning("You need to log in first.")
+        st.stop()
+
+    token = st.session_state["token"]
+    
+    # Fetch current profile data
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(f"{api_url}/protected", headers=headers)
+
+    if response.status_code != 200:
+        st.error("Failed to fetch user details. Please log in again.")
+        st.stop()
+
+    # **Fetch current user profile**
+    response = requests.get(f"{api_url}/get_profile", headers=headers)
+
+    if response.status_code == 200:
+        user_data = response.json()
+    else:
+        st.error("Failed to fetch profile data. Please log in again.")
+        st.stop()
+
+    # **Pre-fill form fields**
+    email = st.text_input("Email", user_data.get("email", ""))
+    phone = st.text_input("Phone Number", user_data.get("phone_number", ""))
+    job = st.text_input("Job Title", user_data.get("job", ""))
+    company = st.text_input("Company Name", user_data.get("company_name", ""))
+    weight = st.text_input("Weight (kg)", str(user_data.get("weight", "")))
+    height = st.text_input("Height (cm)", str(user_data.get("height", "")))
+
+    if st.button("Save Changes"):
+        update_data = {
+            "email": email,
+            "phone_number": phone,
+            "job": job,
+            "company_name": company,
+            "weight": weight,
+            "height": height,
+        }
+
+        update_data = {k: v for k, v in update_data.items() if v}  # Remove empty fields
+
+        if not update_data:
+            st.warning("No changes made.")
+        else:
+            response = requests.put(f"{api_url}/edit_profile", json=update_data, headers=headers)
+
+            if response.status_code == 200:
+                st.success("Profile updated successfully!")
+            else:
+                st.error("Failed to update profile.")

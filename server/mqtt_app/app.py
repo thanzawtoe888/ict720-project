@@ -100,7 +100,7 @@ def on_message(client, userdata, msg):
 
 
 # Initialize SQLite
-conn = sqlite3.connect('group8.db')
+conn = sqlite3.connect(mongo_db)
 c = conn.cursor()
 
 # Enable foreign keys (optional but recommended)

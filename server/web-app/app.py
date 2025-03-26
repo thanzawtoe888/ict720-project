@@ -10,21 +10,15 @@ st.text('Taist ICT720-Group08')
 
 # st.set_page_config(page_title="Streamlit Modular App")
 
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Login", "Register"])
-station_id = st.sidebar.selectbox('Station', ['esp32', 'ESP32'])
-
 
 pages = {
-    "Your account": [
+    "Application": [
+        st.Page("./pages/dashboard/app.py", title="Dashboard"),
         st.Page("./pages/create_account.py", title="Create your account"),
-        st.Page("./pages/manage_account.py", title="Manage your account"),
+    ],
+    "Resources": [
+        st.Page("./pages/learn.py", title="Learn about us")
     ]
-    # ,
-    # "Resources": [
-    #     st.Page("learn.py", title="Learn about us"),
-    #     st.Page("trial.py", title="Try it out"),
-    # ],
 }
 
 pg = st.navigation(pages)

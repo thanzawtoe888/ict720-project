@@ -3,6 +3,8 @@ from pymongo import MongoClient
 from datetime import datetime
 from datetime import timedelta
 from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_cors import CORS
 import json
 import os
 import sys
@@ -18,8 +20,15 @@ if mongo_uri is None or mongo_db is None or mongo_col_device is None or mongo_co
 
 # initialize app
 app = Flask(__name__)
-bcrypt = Bcrypt(app)
+CORS(app)  # Enable CORS for frontend access
+
 mongo_client = MongoClient(mongo_uri)
+
+# JWT Configuration
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "supersecretkey")
+jwt = JWTManager(app)
+
+bcrypt = Bcrypt(app)
 
 print("Client: ", mongo_client, mongo_uri)
 
@@ -79,8 +88,8 @@ def query_station(user_id):
     return jsonify(resp)
 
 
-@app.route('/add_user', methods=['POST'])
-def add_user():
+@app.route('/register', methods=['POST'])
+def register():
     print("Register endpoint hit.")
 
     data = request.json
@@ -119,5 +128,57 @@ def add_user():
         print("Error inserting user:", str(e))
         return jsonify({"error": "An error occurred", "details": str(e)}), 500
     
+
+### **📌 Login & Get JWT Token**
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+
+    user = users_collection.find_one({"username": username})
+    if not user or not bcrypt.check_password_hash(user["password"], password):
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    access_token = create_access_token(identity=username)
+    return jsonify({"message": "Login successful", "token": access_token})
+
+### **📌 Protected Route (Requires Authentication)**
+@app.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    current_user = get_jwt_identity()
+    return jsonify({"message": f"Hello {current_user}, you have access!"})
+
+
+### **📌 Edit User Profile (Authenticated)**
+@app.route("/edit_profile", methods=["PUT"])
+@jwt_required()
+def edit_profile():
+    current_user = get_jwt_identity()
+    data = request.json
+
+    allowed_fields = {"email", "phone_number", "job", "company_name", "weight", "height"}
+    update_data = {k: v for k, v in data.items() if k in allowed_fields}
+
+    if not update_data:
+        return jsonify({"error": "No valid fields to update"}), 400
+
+    users_collection.update_one({"username": current_user}, {"$set": update_data})
+
+    return jsonify({"message": "Profile updated successfully", "updated_fields": update_data}), 200
+
+
+@app.route("/get_profile", methods=["GET"])
+@jwt_required()
+def get_profile():
+    current_user = get_jwt_identity()
+    user = users_collection.find_one({"username": current_user}, {"_id": 0, "password": 0})  # Exclude _id & password
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    return jsonify(user), 200
+
 if __name__ == "__main__":
     app.run(debug=True)

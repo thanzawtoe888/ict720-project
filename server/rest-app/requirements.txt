@@ -2,3 +2,5 @@ flask
 gunicorn
 pymongo
 flask-bcrypt
+flask_jwt_extended
+flask_cors
