@@ -39,7 +39,7 @@ def on_message(client, userdata, msg):
         print("Users in the database:")
         # Format the data
         formatted_data = "\n".join([f"{entry[0]}. {entry[3]} {entry[4]}" for entry in results]) 
-        client.publish("ict720/group8/user_list", formatted_data)
+        client.publish("ict720/group8/logs/user_list", formatted_data)
     
     if msg.topic.split('/')[-1] == "register":
         data = json.loads(msg.payload.decode())
@@ -73,7 +73,7 @@ def on_message(client, userdata, msg):
         spo2 = data['spo2']
         bpm = data['bpm']
         user_id = data['user_id']
-        c.execute("INSERT INTO group8 (user_id, spo2, bpm) VALUES (?, ?, ?)", (user_id, spo2, bpm))
+        c.execute("INSERT INTO logs (user_id, spo2, bpm) VALUES (?, ?, ?)", (user_id, spo2, bpm))
         print("Inserted to SQLite")
         conn.commit()
         # insert to MongoDB
@@ -121,7 +121,7 @@ c.execute('''
 conn.commit()
 
 c.execute('''
-    CREATE TABLE IF NOT EXISTS group8 (
+    CREATE TABLE IF NOT EXISTS logs (
         _id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
         user_id TEXT NOT NULL,
