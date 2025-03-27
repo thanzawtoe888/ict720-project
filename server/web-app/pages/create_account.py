@@ -8,6 +8,6 @@ api_url = os.getenv('API_URL', None)
 if api_url is None:
     raise ValueError('API URL are not set')
 
-st.subheader('Register')
-st.text('Register your accounts')
+st.subheader('Account')
+st.text('Create your accounts')
 registration_form(api_url)

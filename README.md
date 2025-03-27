@@ -6,7 +6,7 @@ This is a health monitoring application that tracks the status of gym trainers i
 
 ## Our members
 1. Than Zaw Toe (SIIT,Thammasat)
-2. Narodom Yatnimit (KU)
+2. Narodom Yatnimit (KU, Kasetsart University)
 3. Luong Duc Nhat (Institute of Science Tokyo)
 
 ## User stories
