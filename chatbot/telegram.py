@@ -1,5 +1,5 @@
 import requests
-TOKEN = "7692391526:AAGmAkLLRh-zwVBObQBfLZnIS7kAXhDrzKk"
+TOKEN = ""
 BASE_URL = f"https://api.telegram.org/bot{TOKEN}"
 chat = 7086001303
 
