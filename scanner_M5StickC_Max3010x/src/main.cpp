@@ -12,9 +12,9 @@
 #include <WiFiMulti.h>
 #include <PubSubClient.h>
 
-const char *ssid     = "NHAT-LAPTOP 9118";
-const char *password = "chachacha123";
-const char* mqtt_server = "172.18.20.231";
+const char *ssid     = "Gens1902";
+const char *password = "master3033";
+const char* mqtt_server = "192.168.43.161";
 
 WiFiClient espClient;
 PubSubClient client(espClient);

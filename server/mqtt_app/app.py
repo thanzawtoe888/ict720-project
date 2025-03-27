@@ -36,8 +36,10 @@ def on_message(client, userdata, msg):
     if msg.topic.split('/')[-1] == "request":
         c.execute("SELECT * FROM users")
         results = c.fetchall()  # This will return a list of tuples
+        db = mongo_client[mongo_db]
         print("Users in the database:")
         # Format the data
+        print(db)
         formatted_data = "\n".join([f"{entry[0]}. {entry[3]} {entry[4]}" for entry in results]) 
         client.publish("ict720/group8/user_list", formatted_data)
     
@@ -100,7 +102,7 @@ def on_message(client, userdata, msg):
 
 
 # Initialize SQLite
-conn = sqlite3.connect('group8.db')
+conn = sqlite3.connect(mongo_db)
 c = conn.cursor()
 
 # Enable foreign keys (optional but recommended)
