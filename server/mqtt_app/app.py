@@ -15,6 +15,7 @@ mongo_col_user = os.getenv('MONGO_COL_USER', None)
 mqtt_broker = os.getenv('MQTT_BROKER', None)
 mqtt_port = os.getenv('MQTT_PORT', None)
 mqtt_topic = os.getenv('MQTT_TOPIC', None)
+
 if mongo_uri is None or mqtt_broker is None or mqtt_port is None or mqtt_topic is None:
     print('MONGO_URI and MQTT settings are required')
     sys.exit(1)
@@ -34,27 +35,25 @@ def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
     # data message
     if msg.topic.split('/')[-1] == "request":
-        c.execute("SELECT * FROM users")
-        results = c.fetchall()  # This will return a list of tuples
         db = mongo_client[mongo_db]
         print("Users in the database:")
-        # Format the data
-        print(db)
-        formatted_data = "\n".join([f"{entry[0]}. {entry[3]} {entry[4]}" for entry in results]) 
+        collection = db['user']
+        results = list(collection.find())
+        formatted_data = "\n".join([f"{row.get("user_id")}. {row.get("first_name")} {row.get("last_name")}" for row in results]) 
         client.publish("ict720/group8/user_list", formatted_data)
     
     if msg.topic.split('/')[-1] == "register":
         data = json.loads(msg.payload.decode())
         
         # Get row count before insertion
-        c.execute("SELECT COUNT(*) FROM users")
+        c.execute("SELECT COUNT(*) FROM user")
         row_count = c.fetchone()[0]  # Fetch the count result
 
         # insert to SQLite
         first_name = data['first_name']
         last_name = data['last_name']
         user_id = row_count
-        c.execute("INSERT INTO users (user_id, first_name, last_name) VALUES (?, ?, ?)", (user_id, first_name, last_name))
+        c.execute("INSERT INTO user (user_id, first_name, last_name) VALUES (?, ?, ?)", (user_id, first_name, last_name))
         print("Inserted to SQLite")
         conn.commit()
         
@@ -107,9 +106,8 @@ c = conn.cursor()
 
 # Enable foreign keys (optional but recommended)
 c.execute("PRAGMA foreign_keys = ON;")
-
 c.execute('''
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE IF NOT EXISTS user (
         _id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
         user_id TEXT UNIQUE NOT NULL,
@@ -129,7 +127,7 @@ c.execute('''
         user_id TEXT NOT NULL,
         spo2 INTEGER,
         bpm INTEGER,
-        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+        FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
     )''')
 conn.commit()
 
