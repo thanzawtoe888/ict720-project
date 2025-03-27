@@ -1,6 +1,6 @@
 services:
     mqtt_app:
-        container_name: mqtt-app  # Custom container name
+        container_name: mqtt_app  # Custom container name
         build: ./mqtt_app
         env_file:
             - .env
@@ -10,8 +10,8 @@ services:
         networks:
           - mongo-bridge
     rest_app:
-        container_name: rest-app  # Custom container name
-        build: ./rest-app
+        container_name: rest_app  # Custom container name
+        build: ./rest_app
         env_file:
             - .env
         ports:
@@ -21,10 +21,10 @@ services:
         networks:
           - mongo-bridge
     web_app:
-      container_name: web-app
+      container_name: web_app
       env_file:
           - .env
-      build: ./web-app
+      build: ./web_app
       ports:
           - "8501:8501"
       depends_on:
@@ -71,31 +71,31 @@ services:
         networks:
           - mongo-bridge
 
-    # Database Manager
-    mongo-express:
-      container_name: mongo-express  # Custom container name
-      image: mongo-express
-      restart: unless-stopped
-      env_file:
-          - .env
-      ports:
-        - 8081:8081
-      depends_on:
-        - mongo
-      environment:
-        ME_CONFIG_MONGODB_URL: ${MONGO_URI}
-        ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
-        ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USERNAME}
-        ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
-        # ME_CONFIG_MONGODB_SERVER: mongo
-        # ME_CONFIG_MONGODB_PORT: 27017
-        ME_CONFIG_BASICAUTH: true
-        ME_CONFIG_BASICAUTH_USERNAME: ${ME_BASIC_AUTH_USERNAME}
-        ME_CONFIG_BASICAUTH_PASSWORD: ${ME_BASIC_AUTH_PASSWORD}
-      networks:
-        - mongo-bridge
-      # networks:       # Add this <--
-      #   - random    # Add this <--
+    # # Database Manager
+    # mongo-express:
+    #   container_name: mongo-express  # Custom container name
+    #   image: mongo-express
+    #   restart: unless-stopped
+    #   env_file:
+    #       - .env
+    #   ports:
+    #     - 8081:8081
+    #   depends_on:
+    #     - mongo
+    #   environment:
+    #     ME_CONFIG_MONGODB_URL: ${MONGO_URI}
+    #     ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+    #     ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USERNAME}
+    #     ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+    #     # ME_CONFIG_MONGODB_SERVER: mongo
+    #     # ME_CONFIG_MONGODB_PORT: 27017
+    #     ME_CONFIG_BASICAUTH: true
+    #     ME_CONFIG_BASICAUTH_USERNAME: ${ME_BASIC_AUTH_USERNAME}
+    #     ME_CONFIG_BASICAUTH_PASSWORD: ${ME_BASIC_AUTH_PASSWORD}
+    #   networks:
+    #     - mongo-bridge
+    #   # networks:       # Add this <--
+    #   #   - random    # Add this <--
 
 networks:
   mongo-bridge:
