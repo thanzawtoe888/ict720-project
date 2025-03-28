@@ -4,7 +4,6 @@ import numpy as np
 from components.sidebar import sidebar
 
 # st.set_page_config(page_title="Streamlit Modular App")
-
 pages = {
     "Application": [
         st.Page("./pages/dashboard/app.py", title="Dashboard"),

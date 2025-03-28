@@ -1,4 +1,3 @@
-
 # import streamlit as st
 # import pandas as pd
 # import numpy as np
@@ -8,8 +7,10 @@
 # from langchain.schema import HumanMessage, AIMessage
 # import os
 
+
+# api_key = os.getenv("GOOGLE_API_KEY")
 # # Set up the LLM model
-# llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", api_key='AIzaSyDsYbWhru1ZsX820AoAKOLYlWRsxOkMSVI')
+# llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", api_key=api_key)
 
 # # chat history
 # if "messages" not in st.session_state:
@@ -65,5 +66,5 @@
 #         with st.chat_message("assistant"):
 #             st.write(response.content)
 
-# # with data_ui:
-# #     st.json(asset_data)
+# with data_ui:
+#     st.json(asset_data)
