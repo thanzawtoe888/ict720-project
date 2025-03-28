@@ -1,4 +1,4 @@
-from flask import Flask, request, abort, send_from_directory, render_template
+from flask import Flask, request, abort, send_from_directory, render_template, jsonify
 import requests
 import json
 import os
@@ -80,6 +80,7 @@ from linebot.v3.messaging import (
 )
 
 # Get environment variables
+user_id_env = os.getenv('LINE_USER_ID', None)
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
 channel_access_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', None)
 liff_id = os.getenv('LIFF_ID', None)
@@ -122,11 +123,48 @@ def handle_text_message(event):
             )
         )
 
+@app.route('/emergency_alert', methods=['POST'])
+def emergency_alert():
+    # Get form data from the request
+    data = request.json
+    spo2 = data.get("spo2")  # Spo2 value
+    bpm = data.get("bpm")  # BPM value
+    activity = data.get("activity")  # Activity type (1 for walking, 2 for running)
+
+    # Check if all required fields are present
+    if not spo2 or not bpm or not activity:
+        return jsonify({"error": "Missing required data: spo2, bpm, or activity"}), 400
+
+    # Compose the alert message
+    alert_message = f"Emergency Alert!\nSpo2: {spo2}\nBPM: {bpm}\nActivity: {activity}"
+
+    # Optional: Send this alert to a LINE user or another service
+    # For example, you could send the alert to a LINE user using the LINE Messaging API
+    try:
+        user_id = user_id_env  # Replace with the actual user ID
+        with ApiClient(configuration) as api_client:
+            line_bot_api = MessagingApi(api_client)
+            push_message_request = PushMessageRequest(
+                to=user_id,
+                messages=[TextMessage(text=alert_message)]
+            )
+            line_bot_api.push_message(push_message_request)
+    except ApiException as e:
+        return jsonify({"error": "Failed to send alert via LINE"}), 500
+
+    # Return the result as a JSON response
+    response = {
+        "status": "Emergency alert sent successfully!",
+        "spo2": spo2,
+        "bpm": bpm,
+        "activity": activity
+    }
+    return jsonify(response), 200
+
 # LIFF
 @app.route('/liff', methods=['GET'])
 def liff():
     return render_template('liff.html', liff_id=liff_id)
-
 
 
 # Function to fetch user data from an API
