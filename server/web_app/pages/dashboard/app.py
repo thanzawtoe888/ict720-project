@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import os
 from components.form import edit_profile_form
+from pages.dashboard.home import home
 # Get environment variables
 api_url = os.getenv('API_URL', None)
 
@@ -38,11 +39,13 @@ if not st.session_state["authenticated"]:
         # Access token and message
         token = data.get("token")  # Use .get() to avoid KeyError
         message = data.get("message")
+        user_id = data.get("user_id")
 
         if response.status_code == 200:
             st.session_state["authenticated"] = True
             st.session_state["username"] = username
             st.session_state["token"] = token
+            st.session_state["user_id"] = user_id
             st.success(message)
             st.rerun()  # Reload the page after login
         else:
@@ -61,10 +64,36 @@ else:
         st.session_state["token"] = None
         st.success("Logged out successfully!")
 
-    home, profile = st.tabs(["🏠 Home", "📄 Profile"])
+   # Ensure the user is logged in
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        st.warning("You need to log in first.")
+        st.stop()
 
-    with home:
-        st.header("A cat")
-    with profile:
+    token = st.session_state["token"]
+    
+    # Fetch current profile data
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(f"{api_url}/protected", headers=headers)
+
+    if response.status_code != 200:
+        st.error("Failed to fetch user details. Please log in again.")
+        st.stop()
+
+    # **Fetch current user profile**
+    response = requests.get(f"{api_url}/get_profile", headers=headers)
+
+    if response.status_code == 200:
+        user_data = response.json()
+    else:
+        st.error("Failed to fetch profile data. Please log in again.")
+        st.stop()
+
+    st.session_state["user_id"] = user_data.get("user_id", 0)
+
+    home_tab, profile_tab = st.tabs(["🏠 Home", "📄 Profile"])
+
+    with home_tab:
+        home(api_url)
+    with profile_tab:
         st.write("Profile man.")
         edit_profile_form(api_url)

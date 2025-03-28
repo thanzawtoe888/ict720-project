@@ -31,21 +31,21 @@ def registration_form(api_url):
             "username": username,
             "password": password,
             "email": email,
-            "first-name": first_name,
-            "last-name": last_name,
+            "first_name": first_name,
+            "last_name": last_name,
             "gender": gender,
             "nationality": nationality,
             "age": int(age),
             "weight": float(weight),
             "height": float(height),
-            "phone-number": phone_number,
-            "company-name": company_name,
+            "phone_number": phone_number,
+            "company_name": company_name,
             "job": job
         }
 
         try:
-            print(api_url + "/resgister" + "  \n", user_data)
-            response = requests.post(api_url + "/resgister", json=user_data)
+            print(api_url + "/register" + "  \n", user_data)
+            response = requests.post(api_url + "/register", json=user_data)
             result = response.json()
 
             if response.status_code == 201:
