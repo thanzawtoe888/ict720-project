@@ -6,6 +6,8 @@ import os
 import sys
 import sqlite3
 from pymongo import MongoClient
+import joblib
+import numpy as np
 
 # initialize environment variables
 mongo_uri = os.getenv('MONGO_URI', None)
@@ -22,6 +24,10 @@ if mongo_uri is None or mqtt_broker is None or mqtt_port is None or mqtt_topic i
 
 # initialize app
 mongo_client = MongoClient(mongo_uri)
+
+# Load the trained model and scaler
+model = joblib.load('classification_model.pkl')
+scaler = joblib.load('scaler.pkl')
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -106,6 +112,15 @@ def on_message(client, userdata, msg):
                                "excercise_mode": excercise_mode})
         print(db_dev_col.count_documents({}))
         print("Inserted to MongoDB")
+        
+        new_data = np.array([[spo2, bpm]])
+        new_data_scaled = scaler.transform(new_data)
+        prediction = model.predict(new_data_scaled)
+        if prediction[0] == 1:
+            exc_mode = "Running"
+        elif prediction[0] == 2:
+            exc_mode = "Walking"
+        print("Predicted excercise mode:", exc_mode)
 
 # Initialize SQLite
 conn = sqlite3.connect(mongo_db)
