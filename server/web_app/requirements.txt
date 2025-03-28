@@ -8,3 +8,4 @@ seaborn
 langchain
 langchain-google-genai
 joblib
+scikit-learn
