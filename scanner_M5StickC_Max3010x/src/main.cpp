@@ -56,7 +56,10 @@ uint16_t ir_max = 0, red_max = 0, ir_min = 0, red_min = 0, ir_last = 0, red_last
 uint16_t ir_last_raw = 0, red_last_raw = 0;
 uint16_t ir_disdata, red_disdata;
 uint16_t Alpha = 0.3 * 256;
-uint32_t t1, t2, last_beat, Program_freq, lastPubTime;
+uint32_t t1, t2, last_beat, Program_freq;
+// wait 1 minutes before sending the first health data
+// as bpm increasing from 0.0
+uint32_t lastPubTime = millis() + 60000; 
 
 unsigned long lastMsg = 0;
 #define MSG_BUFFER_SIZE (50)
@@ -203,7 +206,7 @@ void loop() {
         Sensor.clearFIFO();
         display_info();
 
-        if ((millis() - lastPubTime) > healthPubInterval) {
+        if (((millis() - lastPubTime) > healthPubInterval) && (beatAvg > 20)) {
             lastPubTime = millis();
             char payload[100];
             doc.clear();
