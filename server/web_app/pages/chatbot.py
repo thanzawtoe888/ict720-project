@@ -5,12 +5,9 @@ import requests
 import json
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage, AIMessage
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import os
 import joblib
+from sklearn.preprocessing import StandardScaler
 
 
 api_key = os.getenv("GOOGLE_API_KEY")
@@ -69,32 +66,43 @@ def fetch_asset_data():
     return found_records
 
 # Function to predict asset location based on BLE data
+# Function to predict asset location based on BLE data
 def make_prediction(context_json):
     try:
-        # Convert JSON string to Python dictionary
-        data = json.loads(context_json)
+        # Check if input is a JSON string or already a Python list
+        if isinstance(context_json, str):
+            data = json.loads(context_json)  # Parse if it's a string
+        else:
+            data = context_json  # Directly use if it's a Python list
 
-        # Extract relevant features
-        features = [
-            data.get("spo2", 0),          # Oxygen saturation level
-            data.get("bpm", 0),           # Heart rate (beats per minute)
-            data.get("excercise_mode", 0), # Exercise mode (1 = active, 0 = inactive)
-            data.get("age", 0),           # Age of user
-            data.get("weight_kg", 0),     # Weight in kg
-            data.get("height_cm", 0)      # Height in cm
-        ]
+        # Convert JSON to DataFrame
+        df = pd.DataFrame(data)
 
-        # Convert to NumPy array (reshape for single input)
-        X_input = np.array(features).reshape(1, -1)
+        # Select features (same as training)
+        X_new = df[['age', 'gender', 'weight_kg', 'height_cm', 'spo2', 'bpm']]
 
-        # Make prediction
-        prediction = model.predict(X_input)
+        # Convert categorical 'gender' to numeric (if used in training)
+        X_new['gender'] = X_new['gender'].map({'Male': 0, 'Female': 1})
 
-        return f"Predicted result: {prediction[0]}"
+        # **Important: Fit a new scaler on input data**
+        scaler = StandardScaler()
+        X_new_scaled = scaler.fit_transform(X_new)  # This is NOT ideal, but required
+
+        # Make a **single prediction** (first row)
+        prediction = model.predict([X_new_scaled[0]])[0]  # Extracts the first prediction
+
+        return f"Predicted result: {prediction}"
 
     except Exception as e:
         return f"Error in prediction: {str(e)}"
-
+    
+def get_action_text(value):
+    if value == 1:
+        return "is walking"
+    elif value == 2:
+        return "is running"
+    else:
+        return "unknown action"
 context_json = fetch_asset_data()
 
 # df = pd.DataFrame()
@@ -103,7 +111,7 @@ context_json = fetch_asset_data()
 # st.dataframe(df)
 
 # UI for API key
-st.title('GenAI App')
+st.title('ChatBot AI App')
 # asset_id = st.sidebar.selectbox('Asset ID',['Asset-0', 'Asset-1', 'Asset-2', 'Asset-3'])
 # asset_data = fetch_asset_data(asset_id)
 # context_json = json.dumps(asset_data, indent=2)
@@ -132,16 +140,19 @@ with chat_ui:
             "timestamp" is the time of observation
             "spo2" is the received signal strength indicator, bigger is closer to the station
             "bpm" BMI ->> four catagories : -Underweight = < 18.5 -Normal weight = 18.5 - 24.9 -Overweight = 25-29.9 -Obesity = BMI of 30 or greater
-            "excercise_mode" there have only 1, and 2 value.
+            "excercise_mode" there have only is walking, and is running for notice user's activaty..
             "age"
             "gender"
             "weight_kg":
             "height_cm"
+        if there have Prediction Result in this prompt that means the output is calculated by another model can you can provide more information.
+        Include, if Prediction Result is 1 that means is walking if there were 2 means is running else unknow the action. you need to provide the our prediction result
         '''
 
         # If the user asks for a prediction, apply the model
         if "predict" in user_input.lower():
             prediction_result = make_prediction(context_json)
+            print(prediction_result)
             prompt += f"\nPrediction Result: {prediction_result}"
 
         # Generate response
