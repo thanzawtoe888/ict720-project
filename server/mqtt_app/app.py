@@ -11,7 +11,7 @@ import numpy as np
 import requests
 
 # initialize environment variables
-api_uri = os.getenv('API_URL', None)
+chatbot_uri = os.getenv('LINE_URL', None)
 mongo_uri = os.getenv('MONGO_URI', None)
 mongo_db = os.getenv('MONGO_DB', None)
 mongo_col_device = os.getenv('MONGO_COL_DEV', None)
@@ -160,7 +160,7 @@ def on_message(client, userdata, msg):
                 "bpm": bpm,
                 "activity": excercise_mode, 
             }
-            url = api_uri + '/emergency_alert'
+            url = chatbot_uri + '/emergency_alert'
             print("alert", form, url)
             response = requests.post(url, json=form)
             # You can check the response status or handle it accordingly
