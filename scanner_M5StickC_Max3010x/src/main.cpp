@@ -20,7 +20,7 @@
 
 const char *ssid     = "Xiaomi2020Laptop";
 const char *password = "11112222";
-const char* mqtt_server = "172.25.170.31";
+const char* mqtt_server = "192.168.208.35";
 const int healthPubInterval = 1000; //ms
 int excercise_mode = 0; // 1: walking, 2: running
 
