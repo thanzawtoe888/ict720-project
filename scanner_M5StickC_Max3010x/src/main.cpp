@@ -17,6 +17,7 @@
 #define MQTT_TOPIC_USER    "ict720/group8/user_list"
 #define MQTT_TOPIC_DATA    "ict720/group8/data"
 
+
 const char *ssid     = "NHAT-LAPTOP 9118";
 const char *password = "chachacha123";
 const char* mqtt_server = "172.18.20.231";
@@ -36,6 +37,7 @@ const byte pulseLED = 26;
 uint32_t irBuffer[bufferLength];
 uint32_t redBuffer[bufferLength];
 
+bool SOSFlag = false;
 int8_t V_Button, flag_Reset;
 int32_t spo2, heartRate, old_spo2;
 int8_t validSPO2, validHeartRate;
@@ -216,6 +218,14 @@ void loop() {
             doc["bpm"] = beatAvg;
             serializeJson(doc, payload);
             client.publish(MQTT_TOPIC_DATA, payload);
+        }
+        M5.update();
+        if (M5.BtnA.wasReleasefor(1000)) {  // The button B is pressed for 3s
+            M5.Lcd.fillScreen(BLACK);  
+            M5.Lcd.setCursor(0, 0);
+            M5.Lcd.println("!!!!SOS!!!");
+            client.publish("ict720/group8/sos", "SOS");
+            delay(5000);
         }
 
         if (!client.connected()) {
