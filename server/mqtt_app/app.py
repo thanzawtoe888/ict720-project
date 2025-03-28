@@ -39,8 +39,27 @@ def on_message(client, userdata, msg):
         print("Users in the database:")
         collection = db['user']
         results = list(collection.find())
-        formatted_data = "\n".join([f"{row.get("user_id")}. {row.get("first_name")} {row.get("last_name")}" for row in results]) 
+        formatted_data = "\n".join([f"{user.get("user_id")}. {user.get("first_name")} {user.get("last_name")}" for user in results]) 
         client.publish("ict720/group8/user_list", formatted_data)
+        
+        # Insert MongoDB data into SQLite
+        for user in results:
+            try:
+                # Prepare the data (use .get() to avoid KeyError if a field is missing)
+                user_id = user.get('user_id', None)  # Use MongoDB's _id field as PRIMARY KEY
+                first_name = user.get('first_name', None)
+                last_name = user.get('last_name', None)
+                
+                # Insert into SQLite
+                c.execute('''
+                    INSERT OR REPLACE INTO user (user_id, first_name, last_name)
+                    VALUES (?, ?, ?);
+                ''', (user_id, first_name, last_name))
+                
+            except Exception as e:
+                print(f"Error inserting user {user.get('_id')}: {e}")
+        
+        
     
     if msg.topic.split('/')[-1] == "register":
         data = json.loads(msg.payload.decode())
@@ -69,12 +88,11 @@ def on_message(client, userdata, msg):
         
     if msg.topic.split('/')[-1] == "data":
         data = json.loads(msg.payload.decode())
-        
         # insert to SQLite
         spo2 = data['spo2']
         bpm = data['bpm']
         user_id = data['user_id']
-        c.execute("INSERT INTO group8 (user_id, spo2, bpm) VALUES (?, ?, ?)", (user_id, spo2, bpm))
+        c.execute("INSERT INTO health_data (user_id, spo2, bpm) VALUES (?, ?, ?)", (user_id, spo2, bpm))
         print("Inserted to SQLite")
         conn.commit()
         # insert to MongoDB
@@ -86,19 +104,6 @@ def on_message(client, userdata, msg):
                                "bpm": bpm})
         print(db_dev_col.count_documents({}))
         print("Inserted to MongoDB")
-
-# # init SQLite
-# conn = sqlite3.connect('group8.db')
-# c = conn.cursor()
-# c.execute('''CREATE TABLE IF NOT EXISTS group8 (
-#           _id INTEGER PRIMARY KEY AUTOINCREMENT,
-#           timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-#           user_id STRING,
-#           spo2 INTEGER,
-#           bpm INTEGER
-#           )''')
-# conn.commit()
-
 
 # Initialize SQLite
 conn = sqlite3.connect(mongo_db)
@@ -121,12 +126,12 @@ c.execute('''
 conn.commit()
 
 c.execute('''
-    CREATE TABLE IF NOT EXISTS group8 (
+    CREATE TABLE IF NOT EXISTS health_data (
         _id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
         user_id TEXT NOT NULL,
         spo2 INTEGER,
-        bpm INTEGER,
+        bpm FLOAT,
         FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
     )''')
 conn.commit()

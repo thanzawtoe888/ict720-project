@@ -11,10 +11,16 @@
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
-const char *ssid     = "Gens1902";
-const char *password = "master3033";
-const char* mqtt_server = "192.168.43.161";
+#define MQTT_TOPIC_REQUEST "ict720/group8/request"
+#define MQTT_TOPIC_USER    "ict720/group8/user_list"
+#define MQTT_TOPIC_DATA    "ict720/group8/data"
+
+const char *ssid     = "NHAT-LAPTOP 9118";
+const char *password = "chachacha123";
+const char* mqtt_server = "172.18.20.231";
+const int healthPubInterval = 5000; //ms
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -39,7 +45,9 @@ uint16_t rates[RATE_SIZE];
 byte rateSpot = 0;
 float beatsPerMinute;
 int beatAvg;
+int user_id;
 byte num_fail;
+JsonDocument doc;
 
 uint16_t line[2][320] = {0};
 
@@ -48,24 +56,12 @@ uint16_t ir_max = 0, red_max = 0, ir_min = 0, red_min = 0, ir_last = 0, red_last
 uint16_t ir_last_raw = 0, red_last_raw = 0;
 uint16_t ir_disdata, red_disdata;
 uint16_t Alpha = 0.3 * 256;
-uint32_t t1, t2, last_beat, Program_freq;
-
-
-
-
-
-
-
+uint32_t t1, t2, last_beat, Program_freq, lastPubTime;
 
 unsigned long lastMsg = 0;
 #define MSG_BUFFER_SIZE (50)
 char msg[MSG_BUFFER_SIZE];
 bool userMessageReceived = false; // Flag to track if the message is received
-
-
-
-
-
 
 void display_info();
 void connectWifi();
@@ -78,6 +74,7 @@ void callBack(void) {
     if (V_Button == 0) flag_Reset = 1;
     delay(10);
 }
+
 
 void setup() {
     // init M5
@@ -108,7 +105,7 @@ void setup() {
         
         if (client.connect(clientId.c_str())) {
             M5.Lcd.println("Connected to MQTT");
-            client.subscribe("ict720/group8/user_list"); // Subscribe to topic
+            client.subscribe(MQTT_TOPIC_USER); // Subscribe to topic
         } 
         else {
             M5.Lcd.print("Failed, rc=");
@@ -117,7 +114,7 @@ void setup() {
         }
     }
     // Stay in loop until the first message is received
-    client.publish("ict720/group8/request", "users list needed");
+    client.publish(MQTT_TOPIC_REQUEST, "user list needed");
     while (!userMessageReceived) {
         client.loop(); // Keep the connection alive and check for new messages
     }
@@ -206,6 +203,17 @@ void loop() {
         Sensor.clearFIFO();
         display_info();
 
+        if ((millis() - lastPubTime) > healthPubInterval) {
+            lastPubTime = millis();
+            char payload[100];
+            doc.clear();
+            doc["timestamp"] = millis();
+            doc["user_id"] = user_id;
+            doc["spo2"] = spo2;
+            doc["bpm"] = beatAvg;
+            serializeJson(doc, payload);
+            client.publish(MQTT_TOPIC_DATA, payload);
+        }
 
         if (!client.connected()) {
             reConnect();
@@ -279,6 +287,7 @@ void display_info() {
         Disbuff.setTextColor(RED);
         Disbuff.printf("No Finger!!");
     }
+
     Disbuff.pushSprite(0, 0);
 }
 
@@ -322,11 +331,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
     if (message.length() > 0) {
         user_count++;
     }
-
-    // for (int i = 0; i < length; i++) {
-    //     M5.Lcd.print((char)payload[i]);
-    // }
-    // M5.Lcd.println();
     M5.Lcd.println("Press btn A to move and hold it to select.");
     int i = 0;
     while (1) {
@@ -337,9 +341,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
             if (i > user_count) i = 1;
             M5.Lcd.printf("Select user %d?", i);
         } 
-        else if (M5.BtnA.wasReleasefor(700)) {
+        else if (M5.BtnA.wasReleasefor(500)) {
             cleanScreen();
-            M5.Lcd.printf("Hello user %d!!!!\n", i);
+            M5.Lcd.printf("User %d is selected!!!!\n", i);
+            user_id = i-1;
             delay(3000);
             break;
         }
