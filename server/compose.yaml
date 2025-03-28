@@ -33,14 +33,19 @@ services:
             - mqtt_app
       networks:
           - mongo-bridge
-    # bot_app:
-    #     build: ./bot_app
-    #     env_file:
-    #         - .env
-    #     ports:
-    #         - "8000:8000"
-    #     depends_on:
-    #         - mongo
+    bot_app:
+        container_name: bot_app
+
+        build: ./bot_app
+        env_file:
+            - .env
+        ports:
+            - "8000:8000"
+        depends_on:
+            - mongo
+            - rest_app
+        networks:
+          - mongo-bridge
     mosquitto:
         container_name: mosquitto  # Custom container name
         image: eclipse-mosquitto
@@ -72,30 +77,23 @@ services:
           - mongo-bridge
 
     # # Database Manager
-    # mongo-express:
-    #   container_name: mongo-express  # Custom container name
-    #   image: mongo-express
-    #   restart: unless-stopped
-    #   env_file:
-    #       - .env
-    #   ports:
-    #     - 8081:8081
-    #   depends_on:
-    #     - mongo
-    #   environment:
-    #     ME_CONFIG_MONGODB_URL: ${MONGO_URI}
-    #     ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
-    #     ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USERNAME}
-    #     ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
-    #     # ME_CONFIG_MONGODB_SERVER: mongo
-    #     # ME_CONFIG_MONGODB_PORT: 27017
-    #     ME_CONFIG_BASICAUTH: true
-    #     ME_CONFIG_BASICAUTH_USERNAME: ${ME_BASIC_AUTH_USERNAME}
-    #     ME_CONFIG_BASICAUTH_PASSWORD: ${ME_BASIC_AUTH_PASSWORD}
-    #   networks:
-    #     - mongo-bridge
-    #   # networks:       # Add this <--
-    #   #   - random    # Add this <--
+    mongo-express:
+        container_name: mongo-express  # Custom container name
+        image: mongo-express
+        restart: unless-stopped
+        env_file:
+            - .env
+        ports:
+            - 8081:8081
+        depends_on:
+            - mongo
+        environment:
+            ME_CONFIG_MONGODB_URL: ${MONGO_URI}
+            ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+            ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USERNAME}
+            ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+        networks:
+            - mongo-bridge
 
 networks:
   mongo-bridge:

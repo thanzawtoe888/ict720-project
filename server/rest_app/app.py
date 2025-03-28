@@ -42,6 +42,11 @@ print("Connect to user table.")
 users_collection = db[mongo_col_user]
 print("User table connected.")
 
+# Data table
+print("Connect to data table.")
+data_collection = db[mongo_col_device]
+print("Data table connected.")
+
 # Ensure collection exists
 # if "users" not in db.list_collection_names():
 
@@ -94,24 +99,27 @@ def register():
 
     data = request.json
 
-    required_fields = ["username", "password", "email", "first-name", "last-name"]
+    required_fields = ["username", "password", "email", "first_name", "last_name"]
 
     if not data or any(field not in data for field in required_fields):
         return jsonify({"error": "Missing required fields"}), 400
+    
+    user_id = get_next_user_id()  # Get the next user_id based on highest existing value
 
     user_data = {
+        "user_id": user_id,
         "username": data["username"],
         "password": bcrypt.generate_password_hash(data["password"]).decode("utf-8"),
         "email": data["email"],
-        "first_name": data["first-name"],
-        "last_name": data["last-name"],
+        "first_name": data["first_name"],
+        "last_name": data["last_name"],
         "gender": data.get("gender", ""),
         "nationality": data.get("nationality", ""),
         "age": int(data["age"]) if "age" in data else None,
         "weight": float(data["weight"]) if "weight" in data else None,
         "height": float(data["height"]) if "height" in data else None,
-        "phone_number": data.get("phone-number", ""),
-        "company_name": data.get("company-name", ""),
+        "phone_number": data.get("phone_number", ""),
+        "company_name": data.get("company_name", ""),
         "job": data.get("job", "")
     }
 
@@ -179,6 +187,30 @@ def get_profile():
         return jsonify({"error": "User not found"}), 404
 
     return jsonify(user), 200
+
+@app.route("/get_data/user/<user_id>", methods=["GET"])
+def get_data_by_user_id(user_id):
+    """Retrieve all data for a given user_id from the data_collection"""
+    try:
+        # Query the database for documents matching the user_id
+        user_data = list(data_collection.find({"user_id": int(user_id)}, {"_id": 0}))  # Exclude MongoDB `_id`
+
+        if not user_data:
+            return jsonify({"error": "No data found for this user_id"}), 404
+
+        return jsonify({"user_id": user_id, "data": user_data}), 200
+
+    except Exception as e:
+        print("Error fetching data:", str(e))
+        return jsonify({"error": "An error occurred", "details": str(e)}), 500
+
+
+
+# Utils
+def get_next_user_id():
+    """Get the next available user_id by finding the highest current value and adding 1"""
+    last_user = users_collection.find_one({}, sort=[("user_id", -1)])  # Get user with highest ID
+    return (last_user["user_id"] + 1) if last_user else 0  # Start at 0 if no users exist
 
 if __name__ == "__main__":
     app.run(debug=True)

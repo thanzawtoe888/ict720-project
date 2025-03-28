@@ -3,5 +3,7 @@ pandas
 numpy
 urllib3
 requests
+matplotlib
+seaborn
 # langchain
 # langchain-google-genai
