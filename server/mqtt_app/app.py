@@ -8,8 +8,10 @@ import sqlite3
 from pymongo import MongoClient
 import joblib
 import numpy as np
+import requests
 
 # initialize environment variables
+api_uri = os.getenv('API_URL', None)
 mongo_uri = os.getenv('MONGO_URI', None)
 mongo_db = os.getenv('MONGO_DB', None)
 mongo_col_device = os.getenv('MONGO_COL_DEV', None)
@@ -28,6 +30,51 @@ mongo_client = MongoClient(mongo_uri)
 # Load the trained model and scaler
 model = joblib.load('classification_model.pkl')
 scaler = joblib.load('scaler.pkl')
+
+
+# narodom added
+# -------------------------------------------------
+def check_health_threshold(spo2: float, bpm: float, activity: int) -> str:
+    """
+    Check if SpO2 and BPM values exceed danger thresholds based on activity type.
+    
+    :param spo2: Oxygen saturation level (float)
+    :param bpm: Heart rate in beats per minute (float)
+    :param activity: Activity type, either 1 for 'walking' or 2 for 'running' (int)
+    :return: Alert message if threshold is exceeded, otherwise 'Normal'
+    """
+    # Define thresholds for walking
+    walking_thresholds = {
+        "spo2": (90.0, 100.0),  # Normal range: 90-100%
+        "bpm": (60.0, 120.0)    # Normal BPM range for walking
+    }
+    
+    # Define thresholds for running
+    running_thresholds = {
+        "spo2": (88.0, 100.0),  # Slightly lower SpO2 due to exertion
+        "bpm": (100.0, 180.0)   # Normal BPM range for running
+    }
+    
+    # Select the appropriate threshold based on activity
+    if activity == 1:  # Walking
+        thresholds = walking_thresholds
+    elif activity == 2:  # Running
+        thresholds = running_thresholds
+    else:
+        return "Invalid activity type. Use 1 for 'walking' or 2 for 'running'."
+    
+    # Check SpO2 threshold
+    if spo2 < thresholds["spo2"][0]:
+        return f"ALERT: Low SpO2 detected ({spo2}%). Possible hypoxia risk!"
+    
+    # Check BPM threshold
+    if bpm < thresholds["bpm"][0]:
+        return f"ALERT: Low BPM detected ({bpm}). Possible bradycardia risk!"
+    elif bpm > thresholds["bpm"][1]:
+        return f"ALERT: High BPM detected ({bpm}). Possible tachycardia risk!"
+    
+    return "Normal"
+#--------------------------------------------------------------
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -95,6 +142,7 @@ def on_message(client, userdata, msg):
     if msg.topic.split('/')[-1] == "data":
         data = json.loads(msg.payload.decode())
         # insert to SQLite
+        print(data)
         spo2 = data['spo2']
         bpm = data['bpm']
         user_id = data['user_id']
@@ -102,6 +150,27 @@ def on_message(client, userdata, msg):
         c.execute("INSERT INTO health_data (user_id, spo2, bpm) VALUES (?, ?, ?)", (user_id, spo2, bpm))
         print("Inserted to SQLite")
         conn.commit()
+
+        # narodomy added
+        #--------------------------
+        threshold_result = check_health_threshold(spo2, bpm, excercise_mode)
+        if threshold_result != "Normal":
+            form = {
+                "spo2": spo2,
+                "bpm": bpm,
+                "activity": excercise_mode, 
+            }
+            url = api_uri + '/emergency_alert'
+            print("alert", form, url)
+            response = requests.post(url, json=form)
+            # You can check the response status or handle it accordingly
+            if response.status_code == 200:
+                print("Request successful")
+            else:
+                print("Request failed", response.status_code)
+        #--------------------------
+
+
         # insert to MongoDB
         db = mongo_client[mongo_db]
         db_dev_col = db[mongo_col_device]
@@ -127,7 +196,8 @@ conn = sqlite3.connect(mongo_db)
 c = conn.cursor()
 
 # Enable foreign keys (optional but recommended)
-c.execute("PRAGMA foreign_keys = ON;")
+# Narodom Commented
+# c.execute("PRAGMA foreign_keys = ON;")
 c.execute('''
     CREATE TABLE IF NOT EXISTS user (
         _id INTEGER PRIMARY KEY AUTOINCREMENT,

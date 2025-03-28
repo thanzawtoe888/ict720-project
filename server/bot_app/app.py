@@ -113,76 +113,14 @@ def handle_text_message(event):
     text = event.message.text     
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
-        # check station
-        if text.startswith('#'):
-            req = requests.get(rest_station_api + text[1:])
-            print("from station:",rest_station_api + text[1:])
-            data = req.json()
-            print("from station data:",data)
-            # return number of devices
-            count = len(data['data'])
-            resp_text = 'Number of devices: ' + str(count)
-            #resp_text = str(data['data'])            
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[TextMessage(text=resp_text)]
-                )
-            )
-        # check asset
-        elif text.startswith('*'):
-            parts = text.split(' ', 1)  # Split into asset code and additional text
-            asset_code = parts[0][1:]  # Remove '*' from asset code
-            user_input = parts[1] if len(parts) > 1 else ""
-
-            asset_data = get_asset_data(asset_code)
-            
-            # Convert JSON data to string format
-            context_json = str(asset_data)  
-
-            # Construct prompt with context
-            prompt = f'''
-            Now, answer the following question based on the JSON data:
-            {user_input}
-            Do not give JSON data in the answer.
-
-            Here is the info about the asset tracking with Bluetooth Low Energy (BLE) technology.
-            {context_json}
-
-            JSON data contains the following fields:
-            "asset" is the asset ID
-            "status" is the status of query operation
-            "data" is the record of observations containing the following three fields:
-                "timestamp" is the time of observation
-                "rssi" is the received signal strength indicator, bigger is closer to the station
-                "station" is the id of BLE station that made the observation
-            '''
-
-            # Get AI response
-            resp_text = ai_chat(prompt)
-
-            # Send reply
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[TextMessage(text=resp_text)]
-                )
-            )
         # not commands
-        else:
-            # line_bot_api.reply_message(
-            #     ReplyMessageRequest(
-            #         reply_token=event.reply_token,
-            #         messages=[TextMessage(text=text)]
-            #     )
-            # )
-            print(text, ai_chat(text))
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[TextMessage(text=ai_chat(text))]
-                )
+        print(text, ai_chat(text))
+        line_bot_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=ai_chat(text))]
             )
+        )
 
 # LIFF
 @app.route('/liff', methods=['GET'])
@@ -210,3 +148,4 @@ def get_asset_data(asset_code):
     data = req.json()
     print("from asset data:", data)
     return str(data['data'])
+
