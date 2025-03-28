@@ -18,10 +18,11 @@
 #define MQTT_TOPIC_DATA    "ict720/group8/data"
 
 
-const char *ssid     = "NHAT-LAPTOP 9118";
-const char *password = "chachacha123";
-const char* mqtt_server = "172.18.20.231";
-const int healthPubInterval = 5000; //ms
+const char *ssid     = "Xiaomi2020Laptop";
+const char *password = "11112222";
+const char* mqtt_server = "172.25.170.31";
+const int healthPubInterval = 1000; //ms
+int excercise_mode = 0; // 1: walking, 2: running
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -216,6 +217,7 @@ void loop() {
             doc["user_id"] = user_id;
             doc["spo2"] = spo2;
             doc["bpm"] = beatAvg;
+            doc["excercise_mode"] = excercise_mode;
             serializeJson(doc, payload);
             client.publish(MQTT_TOPIC_DATA, payload);
         }
@@ -358,6 +360,28 @@ void callback(char* topic, byte* payload, unsigned int length) {
             cleanScreen();
             M5.Lcd.printf("User %d is selected!!!!\n", i);
             user_id = i-1;
+            delay(3000);
+            break;
+        }
+    }
+    
+    // select excercise mode
+    int j = 0;
+    M5.Lcd.println(" Please select your exercise mode: ");
+    M5.Lcd.println(" 1. Walking");
+    M5.Lcd.println(" 2. Running");
+    while (1) {
+        M5.update();
+        if (M5.BtnA.wasReleased()) {
+            M5.Lcd.setCursor(7, 70);
+            j++;
+            if (j > 2) j = 1;
+            M5.Lcd.printf(" Select mode %d?", j);
+        } 
+        else if (M5.BtnA.wasReleasefor(500)) {
+            cleanScreen();
+            M5.Lcd.printf(" Mode %d is selected!!!!\n", j);
+            excercise_mode = j;
             delay(3000);
             break;
         }

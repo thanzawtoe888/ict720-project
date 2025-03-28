@@ -92,6 +92,7 @@ def on_message(client, userdata, msg):
         spo2 = data['spo2']
         bpm = data['bpm']
         user_id = data['user_id']
+        excercise_mode = data['excercise_mode']
         c.execute("INSERT INTO health_data (user_id, spo2, bpm) VALUES (?, ?, ?)", (user_id, spo2, bpm))
         print("Inserted to SQLite")
         conn.commit()
@@ -101,7 +102,8 @@ def on_message(client, userdata, msg):
         db_dev_col.insert_one({"timestamp": datetime.now(), 
                                "user_id": user_id,
                                "spo2": spo2, 
-                               "bpm": bpm})
+                               "bpm": bpm,
+                               "excercise_mode": excercise_mode})
         print(db_dev_col.count_documents({}))
         print("Inserted to MongoDB")
 
@@ -132,6 +134,7 @@ c.execute('''
         user_id TEXT NOT NULL,
         spo2 INTEGER,
         bpm FLOAT,
+        excercise_mode INYEGER,
         FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
     )''')
 conn.commit()
