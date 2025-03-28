@@ -120,7 +120,8 @@ def register():
         "height": float(data["height"]) if "height" in data else None,
         "phone_number": data.get("phone_number", ""),
         "company_name": data.get("company_name", ""),
-        "job": data.get("job", "")
+        "job": data.get("job", ""),
+        "timestamp": datetime.utcnow()  # Use UTC time for MongoDB ISODate
     }
 
     try:
