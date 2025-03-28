@@ -1,0 +1,99 @@
+services:
+    mqtt_app:
+        container_name: mqtt_app  # Custom container name
+        build: ./mqtt_app
+        env_file:
+            - .env
+        depends_on:
+            - mosquitto
+            - mongo
+        networks:
+          - mongo-bridge
+    rest_app:
+        container_name: rest_app  # Custom container name
+        build: ./rest_app
+        env_file:
+            - .env
+        ports:
+            - "5000:5000"
+        depends_on:
+            - mongo
+        networks:
+          - mongo-bridge
+    web_app:
+      container_name: web_app
+      env_file:
+          - .env
+      build: ./web_app
+      ports:
+          - "8501:8501"
+      depends_on:
+            - rest_app
+            # - bot_app
+            - mqtt_app
+      networks:
+          - mongo-bridge
+    bot_app:
+        container_name: bot_app
+
+        build: ./bot_app
+        env_file:
+            - .env
+        ports:
+            - "8000:8000"
+        depends_on:
+            - mongo
+            - rest_app
+        networks:
+          - mongo-bridge
+    mosquitto:
+        container_name: mosquitto  # Custom container name
+        image: eclipse-mosquitto
+        ports:
+            - "1883:1883"
+        volumes:
+            - ./mosquitto/config:/mosquitto/config
+            - ./mosquitto/data:/mosquitto/data
+            - ./mosquitto/log:/mosquitto/log
+        networks:
+          - mongo-bridge
+    # Database - Mongo DB
+    mongo:
+        container_name: mongo  # Custom container name
+        image: mongo
+        # restart: always
+        env_file:
+            - .env
+        ports:
+            - "27017:27017"
+        volumes:
+            - ./mongo/data:/data/db
+            - ./mongo/init:/docker-entrypoint-initdb.d
+        environment:
+          MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+          MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+          MONGO_INITDB_DATABASE: ${MONGO_DB}
+        networks:
+          - mongo-bridge
+
+    # # Database Manager
+    mongo-express:
+        container_name: mongo-express  # Custom container name
+        image: mongo-express
+        restart: unless-stopped
+        env_file:
+            - .env
+        ports:
+            - 8081:8081
+        depends_on:
+            - mongo
+        environment:
+            ME_CONFIG_MONGODB_URL: ${MONGO_URI}
+            ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+            ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USERNAME}
+            ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+        networks:
+            - mongo-bridge
+
+networks:
+  mongo-bridge:
