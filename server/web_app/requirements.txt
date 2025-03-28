@@ -5,5 +5,6 @@ urllib3
 requests
 matplotlib
 seaborn
-# langchain
-# langchain-google-genai
+langchain
+langchain-google-genai
+joblib
