@@ -207,6 +207,38 @@ def get_data_by_user_id(user_id):
 
 
 
+@app.route('/emergency_alert', methods=['POST'])
+def emergency_alert():
+    """
+    Endpoint to check the health condition based on SpO2, BPM, and activity.
+    Expects form data with 'spo2', 'bpm', and 'activity' fields.
+    """
+    print("Entry Endpoint Emergency Alert")
+    try:
+        # Get form data from the request
+        data = request.json
+        spo2 = data.get("spo2") # Spo2 value
+        bpm = data.get("bpm") # BPM value
+        activity  = data.get("activity") # Activity type (1 for walking, 2 for running)
+
+        
+       # Return the result as a JSON response
+        response = {
+            "text": "Emergency Alert!",
+            "spo2": spo2,
+            "bpm": bpm,
+            "activity": activity
+        }
+        return jsonify(response), 200
+
+    except KeyError as e:
+        return jsonify({"error": f"Missing parameter: {str(e)}"}), 400
+    except ValueError as e:
+        return jsonify({"error": f"Invalid value for parameter: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # Utils
 def get_next_user_id():
     """Get the next available user_id by finding the highest current value and adding 1"""
