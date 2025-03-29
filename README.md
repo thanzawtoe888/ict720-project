@@ -204,3 +204,23 @@ Before proceeding with the installation, ensure you have the following prerequis
 * **Docker Compose Version:** Ensure you have a compatible version of Docker compose installed.
 
 By following these steps, you should be able to successfully build and run your project using Docker Compose.
+
+## Application Showcase
+
+Below are some screenshots showcasing the web application and LINE Chatbot developed as part of this project.
+
+**Web Application Screenshots:**
+
+![Web application showcase 1](images/web-app-1.png)
+![Web application showcase 2](images/web-app-2.png)
+![Web application showcase 3](images/web-app-3.png)
+![Web application showcase 4](images/web-app-4.png)
+![Web application showcase 5](images/web-app-5.png)
+![Web application showcase 6](images/web-app-6.png)
+![Web application showcase 7](images/web-app-7.png)
+![Web application showcase 8](images/web-app-8.png)
+![Web application showcase 9](images/web-app-9.png)
+
+**LINE Chatbot Screenshot:**
+
+![LINE Chatbot showcase 1](images/line-chatbot.png)
