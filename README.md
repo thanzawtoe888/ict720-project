@@ -64,7 +64,7 @@ This is a health monitoring application that tracks the status of gym trainers i
         { "val": 72, "timestamp": "2020-01-01 00:00:00" }
     ]
 }
-
+```
 # Project Build and Installation Guide
 
 This document outlines the steps required to build and install the project using Docker Compose. Please follow these instructions carefully to ensure a successful setup.
