@@ -52,7 +52,7 @@ This project was developed through the collaborative efforts of the following te
 2) **Age**
 3) **Prediction**
 
-| SpO2 Range    | BPM Range       | Workout Focus |
+| SpO2 Range    | BPM Range       | Prediction |
 |---------------|-----------------|------------------------------------------------|
 | **91%-95%** | **70%-85%**       | Walking |
 | **95%-100%** | **50%-70%**   | Running |
