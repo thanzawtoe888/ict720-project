@@ -24,6 +24,47 @@ This is a health monitoring application that tracks the status of gym trainers i
 ![Flowchart of the application](images/flow_chart.png)
 ![Hardware lists](images/hw.png)
 
+
+## Task Members
+
+This project was developed through the collaborative efforts of the following team members, each contributing specialized skills:
+
+* **Luong Duc Nhat:**
+    * MQTT Application Development
+    * M5Stick-C and MAX3010x Hardware (Sensor) Integration
+    * Database Data Insertion
+    * Integration of Subscription Topics into the Database
+
+* **Than Zaw Toe:**
+    * Product Testing
+    * Machine Learning Model Development from Dataset
+    * Provision of Thresholds and Test Cases
+    * Machine Learning Model Implementation
+
+* **Narodom Yatnimit:**
+    * Web Application Development
+    * LINE Bot Development and AI Integration for Display and Interaction
+    * REST API Application Development
+    * Database Data Integration into Web and REST API Applications
+
+## How to use the data
+1) **Name**
+2) **Age**
+3) **BMI** ->> four catagories : 
+-**Underweight** = < 18.5
+-**Normal weight** = 18.5 - 24.9
+-**Overweight** = 25-29.9
+-**Obesity** = BMI of 30 or greater
+	 
+4) **Recommended Workout plan**
+
+| BMI Category    | BMI Range       | Workout Focus |
+|---------------|-----------------|------------------------------------------------|
+| **Underweight** | < 18.5          | Building muscle mass and strength. |
+| **Normal Weight** | 18.5 - 24.9   | Maintaining fitness, improving cardiovascular health, and building strength. |
+| **Overweight** | 25 - 29.9        | Losing weight, improving cardiovascular health, and building strength. |
+| **Obesity** | ≥ 30             | Gradual weight loss, improving cardiovascular health, and increasing mobility. |
+
 ## Data format
 ```json
 {
@@ -171,22 +212,3 @@ Before proceeding with the installation, ensure you have the following prerequis
 * **Docker Compose Version:** Ensure you have a compatible version of Docker compose installed.
 
 By following these steps, you should be able to successfully build and run your project using Docker Compose.
-
-## How to use the data
-1) **Name**
-2) **Age**
-3) **BMI** ->> four catagories : 
--**Underweight** = < 18.5
--**Normal weight** = 18.5 - 24.9
--**Overweight** = 25-29.9
--**Obesity** = BMI of 30 or greater
-	 
-4) **Recommended Workout plan**
-
-| BMI Category    | BMI Range       | Workout Focus |
-|---------------|-----------------|------------------------------------------------|
-| **Underweight** | < 18.5          | Building muscle mass and strength. |
-| **Normal Weight** | 18.5 - 24.9   | Maintaining fitness, improving cardiovascular health, and building strength. |
-| **Overweight** | 25 - 29.9        | Losing weight, improving cardiovascular health, and building strength. |
-| **Obesity** | ≥ 30             | Gradual weight loss, improving cardiovascular health, and increasing mobility. |
-
