@@ -204,6 +204,9 @@ Before proceeding with the installation, ensure you have the following prerequis
 * **Docker Compose Version:** Ensure you have a compatible version of Docker compose installed.
 
 By following these steps, you should be able to successfully build and run your project using Docker Compose.
+**Code Screenshots Explain:**
+![Code Explain 1](images/explain-capture-code-1.png)
+![Code Explain 2](images/explain-capture-code-2.png)
 
 ## Application Showcase
 
