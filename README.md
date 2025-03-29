@@ -50,20 +50,12 @@ This project was developed through the collaborative efforts of the following te
 ## How to use the data
 1) **Name**
 2) **Age**
-3) **BMI** ->> four catagories : 
--**Underweight** = < 18.5
--**Normal weight** = 18.5 - 24.9
--**Overweight** = 25-29.9
--**Obesity** = BMI of 30 or greater
-	 
-4) **Recommended Workout plan**
+3) **Prediction**
 
-| BMI Category    | BMI Range       | Workout Focus |
+| SpO2 Range    | BPM Range       | Workout Focus |
 |---------------|-----------------|------------------------------------------------|
-| **Underweight** | < 18.5          | Building muscle mass and strength. |
-| **Normal Weight** | 18.5 - 24.9   | Maintaining fitness, improving cardiovascular health, and building strength. |
-| **Overweight** | 25 - 29.9        | Losing weight, improving cardiovascular health, and building strength. |
-| **Obesity** | ≥ 30             | Gradual weight loss, improving cardiovascular health, and increasing mobility. |
+| **91%-95%** | **70%-85%**       | Walking |
+| **95%-100%** | **50%-70%**   | Running |
 
 ## Data format
 ```json
