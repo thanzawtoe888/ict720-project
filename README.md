@@ -64,20 +64,18 @@ This is a health monitoring application that tracks the status of gym trainers i
         { "val": 72, "timestamp": "2020-01-01 00:00:00" }
     ]
 }
-```
+
 # Project Build and Installation Guide
 
-This document outlines the steps required to build and install the project. Please follow these instructions carefully to ensure a successful setup.
+This document outlines the steps required to build and install the project using Docker Compose. Please follow these instructions carefully to ensure a successful setup.
 
 ## Prerequisites
 
 Before proceeding with the installation, ensure you have the following prerequisites installed on your system:
 
-* **Python 3.x:** This project is developed using Python. Verify your Python installation by running `python --version` or `python3 --version` in your terminal.
-* **MongoDB:** Ensure MongoDB is installed and running, as the project relies on it for data storage.
-* **MQTT Broker:** An MQTT broker is required for real-time communication.
+* **Docker:** Ensure Docker is installed and running. You can download and install it from the official Docker website: [https://www.docker.com/get-started](https://www.docker.com/get-started)
+* **Docker Compose:** Ensure Docker Compose is installed. Docker Desktop for Windows and macOS includes Docker Compose. If you are using Linux, you may need to install it separately.
 * **Git:** Git is necessary for cloning the repository.
-* **Docker (Optional):** If Docker is used for containerization, ensure it is installed.
 
 ## Installation Steps
 
@@ -117,7 +115,6 @@ Before proceeding with the installation, ensure you have the following prerequis
     REST_USER_URI=<your_user_api_endpoint>
     REST_ASSET_URI=<your_asset_api_endpoint>
     REST_STATION_URI=<your_station_api_endpoint> #If used
-    
 
     # MQTT Configuration
     MQTT_BROKER=<your_mqtt_broker_address>
@@ -138,75 +135,44 @@ Before proceeding with the installation, ensure you have the following prerequis
 
     **Important:** Ensure you replace the placeholder values with your actual configuration details. Securely manage your `.env` file and avoid committing it to version control.
 
-3.  **Install Dependencies (Using pip):**
+3.  **Build and Run with Docker Compose:**
 
-    If your project uses Python dependencies, install them using `pip`.
+    Navigate to the project directory containing the `docker-compose.yml` file and execute the following command:
 
     ```bash
-    pip install -r requirements.txt
+    docker-compose up --build
     ```
 
-    If a `requirements.txt` file is not provided, install the necessary packages manually.
+    * `docker-compose up`: This command starts the services defined in your `docker-compose.yml` file.
+    * `--build`: This option ensures that Docker builds any necessary images before starting the services.
 
-4.  **Build the Project (If Necessary):**
+    Docker Compose will build the Docker images and start the containers based on your configuration. You can monitor the logs in your terminal.
 
-    If your project requires a build step (e.g., compiling code, building Docker images), execute the relevant build commands.
+4.  **Accessing the Application:**
 
-    * **Docker Build Example:**
+    Once the containers are running, you can access your application based on the ports and configurations defined in your `docker-compose.yml` file. Check the logs and your docker-compose file for the correct port mappings.
 
-        ```bash
-        docker build -t <your_image_name> .
-        ```
+5.  **Stopping the Application:**
 
-    * **Python Build (If applicable):**
+    To stop the running containers, use the following command in the same directory:
 
-        If the project contains setup.py run:
+    ```bash
+    docker-compose down
+    ```
 
-        ```bash
-        python setup.py install
-        ```
-
-5.  **Run the Project:**
-
-    Execute the project using the appropriate commands.
-
-    * **Python Execution Example:**
-
-        ```bash
-        python main.py
-        ```
-
-    * **Docker Run Example:**
-
-        ```bash
-        docker run -p <host_port>:<container_port> <your_image_name>
-        ```
-
-    Adjust the commands based on your project's specific requirements.
-
-6.  **Upload/Deployment (If Applicable):**
-
-    If you need to deploy the project to a server or cloud platform, follow the appropriate deployment procedures.
-
-    * **Example: Uploading via SCP:**
-
-        ```bash
-        scp -r <project_directory> <user>@<server_address>:<remote_directory>
-        ```
-
-    * **Deployment to a Cloud Platform:**
-
-        Follow the cloud platform's documentation for deployment instructions.
+    This command will stop and remove the containers created by Docker Compose.
 
 ## Troubleshooting
 
-* If you encounter dependency issues, ensure you have the correct Python version and that your `pip` is up to date.
-* Verify that your environment variables are correctly set in the `.env` file.
-* Check the project's logs for error messages.
-* Consult the project's documentation or contact the project maintainers for further assistance.
+* **Image Build Errors:** If you encounter errors during the image build process, carefully review the Dockerfile(s) and ensure all dependencies are correctly specified.
+* **Container Startup Issues:** If containers fail to start, check the container logs for error messages. You can view logs using `docker-compose logs <service_name>`.
+* **Environment Variable Issues:** Double-check your `.env` file for any typos or incorrect values.
+* **Port Conflicts:** Ensure that the ports specified in your `docker-compose.yml` file are not already in use by other applications.
+* **Docker Compose Version:** Ensure you have a compatible version of Docker compose installed.
+
+By following these steps, you should be able to successfully build and run your project using Docker Compose.
 
 
-** Make sure to configure your `.env` file with the correct values before running the application.
 ## How to use the data
 1) **Name**
 2) **Age**
