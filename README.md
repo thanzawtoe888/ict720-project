@@ -69,6 +69,14 @@ This is a health monitoring application that tracks the status of gym trainers i
 
 This document outlines the steps required to build and install the project using Docker Compose. Please follow these instructions carefully to ensure a successful setup.
 
+## Prerequisites
+
+Before proceeding with the installation, ensure you have the following prerequisites installed on your system:
+
+* **Docker:** Ensure Docker is installed and running. You can download and install it from the official Docker website: [https://www.docker.com/get-started](https://www.docker.com/get-started)
+* **Docker Compose:** Ensure Docker Compose is installed. Docker Desktop for Windows and macOS includes Docker Compose. If you are using Linux, you may need to install it separately.
+* **Git:** Git is necessary for cloning the repository.
+
 ## Installation Steps
 
 1.  **Clone the Repository:**
@@ -163,7 +171,6 @@ This document outlines the steps required to build and install the project using
 * **Docker Compose Version:** Ensure you have a compatible version of Docker compose installed.
 
 By following these steps, you should be able to successfully build and run your project using Docker Compose.
-
 
 ## How to use the data
 1) **Name**
